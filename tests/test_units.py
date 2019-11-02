@@ -1,5 +1,7 @@
 import unittest
 
+from exceptions.dimensionexception import DimensionalException
+from exceptions.unitconversionexception import UnitConversionException
 from omlib.constants import OM, SI
 from omlib.dimension import Dimension
 from omlib.unit import SingularUnit, PrefixedUnit, UnitMultiple, UnitDivision, UnitMultiplication, UnitExponentiation, \
@@ -131,6 +133,41 @@ class TestUnits(unittest.TestCase):
         feet_to_m_factor = Unit.conversion_factor(feet, m)
         self.assertAlmostEqual(0.3048, feet_to_m_factor, delta=0.0001)
 
+    def test_singular_unit_conversion_3(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        myl = Unit.get_singular_unit('my length unit', 'myl', m_dim, identifier=OM.NAMESPACE + 'myl')
+        try:
+            m_to_myl_factor = Unit.conversion_factor(m, myl)
+            self.fail("Singular units that do not have a common base should not be converted between each other")
+        except UnitConversionException as error:
+            self.assertTrue(True)
+        km = Unit.get_prefixed_unit(SI.KILO, m, OM.NAMESPACE + 'kilometre')
+        myl67 = Unit.get_unit_multiple(myl, 67.0, symbol='67myl')
+        try:
+            km_to_myl67_factor = Unit.conversion_factor(km, myl67)
+            self.fail("Singular units that do not have a common base should not be converted between each other")
+        except UnitConversionException as error:
+            self.assertTrue(True)
+        myl67_to_myl_factor = Unit.conversion_factor(myl67, myl)
+        self.assertAlmostEqual(67, myl67_to_myl_factor, delta=0.0001)
+
+    def test_singular_unit_conversion_4(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
+        try:
+            m_to_s_factor = Unit.conversion_factor(m, s)
+            self.fail("Singular units that have different dimension cannot be converted between each other.")
+        except DimensionalException as error:
+            self.assertTrue(True)
+        try:
+            s_to_m_factor = Unit.conversion_factor(s, m)
+            self.fail("Singular units that have different dimension cannot be converted between each other.")
+        except DimensionalException as error:
+            self.assertTrue(True)
+
     def test_prefixed_unit_conversion_1(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
@@ -184,3 +221,30 @@ class TestUnits(unittest.TestCase):
         self.assertAlmostEqual(1e-3, mps_to_kmps, delta=0.0001)
         kmps_to_mps = Unit.conversion_factor(kmps, mps)
         self.assertAlmostEqual(1e3, kmps_to_mps, delta=0.0001)
+
+    def test_unit_expansion_conversion_1(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        m3 = Unit.get_unit_exponentiation(m, 3)
+        cm = Unit.get_prefixed_unit(SI.CENTI, m, OM.NAMESPACE + 'centimetre')
+        cm3 = Unit.get_unit_exponentiation(cm, 3)
+        m3_to_cm3 = Unit.conversion_factor(m3, cm3)
+        self.assertAlmostEqual(1e6, m3_to_cm3, delta=0.0001)
+        cm3_to_m3 = Unit.conversion_factor(cm3, m3)
+        self.assertAlmostEqual(1e-6, cm3_to_m3, delta=0.0001)
+
+    def test_unit_expansion_conversion_2(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        m3 = Unit.get_unit_exponentiation(m, 3)
+        dm = Unit.get_prefixed_unit(SI.DECI, m, OM.NAMESPACE + 'decimetre')
+        dm3 = Unit.get_unit_exponentiation(dm, 3)
+        litre = Unit.get_singular_unit("litre", "l", base_unit=dm3, factor=1.0, identifier=OM.NAMESPACE + 'litre')
+        m3_to_dm3 = Unit.conversion_factor(m3, dm3)
+        self.assertAlmostEqual(1e3, m3_to_dm3, delta=0.0001)
+        dm3_to_m3 = Unit.conversion_factor(dm3, m3)
+        self.assertAlmostEqual(1e-3, dm3_to_m3, delta=0.0001)
+        m3_to_l = Unit.conversion_factor(m3, litre)
+        self.assertAlmostEqual(1e3, m3_to_l, delta=0.0001)
+        l_to_m3 = Unit.conversion_factor(litre, m3)
+        self.assertAlmostEqual(1e-3, l_to_m3, delta=0.0001)

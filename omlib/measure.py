@@ -3,12 +3,12 @@ from omlib.thing import Thing
 
 class Measure(Thing):
 
-    def __init__(self,numericalValue, unit):
+    def __init__(self,numerical_value, unit):
         super.__init__()
-        self.numericalValue = numericalValue
+        self.numerical_value = numerical_value
         self.unit = unit
 
-    def __init__(self, uri, numericalValue, unit):
+    def __init__(self, uri, numerical_value, unit):
         super().__init__(uri)
-        self.numericalValue = numericalValue
+        self.numerical_value = numerical_value
         self.unit = unit

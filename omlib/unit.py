@@ -36,15 +36,11 @@ class Unit(SymbolThing):
 
     @staticmethod
     def __add_unit(unit):
-        duplicate = True
+        duplicate = False
         if isinstance(unit.identifier, URIRef):
-            if Unit.with_identifier(unit.identifier) is None:
-                duplicate = False
-        else:
-            for label in unit.all_labels():
-                u_labels = Unit.with_label(label)
-                if len(u_labels) <= 0:
-                    duplicate = False
+            if Unit.with_identifier(unit.identifier) is not None:
+                duplicate = True
+        print("Unit adding: {} duplicate: {}".format(unit, duplicate))
         if not duplicate:
             Unit._units.append(unit)
 
@@ -74,10 +70,84 @@ class Unit(SymbolThing):
         if not isinstance(to_unit, Unit):
             raise ValueError("The second argument of can_convert is required to be of type Unit.")
 
+    @staticmethod
+    def get_singular_unit(label, symbol, dimensions=Dimension(), base_unit=None, factor=1.0, identifier=None):
+        unit = None
+        if identifier is not None:
+            unit = Unit.with_identifier(identifier)
+        if unit is None:
+            unit = SingularUnit(label, symbol, dimensions, base_unit, factor, identifier)
+            Unit.__add_unit(unit)
+        return unit
+
+    @staticmethod
+    def get_prefixed_unit(prefix, base_unit, identifier=None):
+        unit = None
+        if identifier is not None:
+            unit = Unit.with_identifier(identifier)
+        if unit is None:
+            unit = PrefixedUnit(prefix, base_unit, identifier)
+            Unit.__add_unit(unit)
+        return unit
+
+    @staticmethod
+    def get_unit_multiple(base_unit, factor=1.0, identifier=None, label=None, symbol=None):
+        unit = None
+        if identifier is not None:
+            unit = Unit.with_identifier(identifier)
+        if unit is None:
+            unit = UnitMultiple(base_unit, factor, identifier, label, symbol)
+            Unit.__add_unit(unit)
+        return unit
+
+    @staticmethod
+    def get_unit_multiplication(multiplier, multiplicand, symbol=None, identifier=None):
+        unit = None
+        if identifier is not None:
+            unit = Unit.with_identifier(identifier)
+        if unit is None:
+            for unit in Unit._units:
+                if isinstance(unit, UnitMultiplication):
+                    if str(multiplier.identifier) == str(unit.multiplier.identifier) and \
+                            str(multiplicand.identifier) == str(unit.multiplicand.identifier):
+                        return unit
+            unit = UnitMultiplication(multiplier, multiplicand, symbol, identifier)
+            Unit.__add_unit(unit)
+        return unit
+
+    @staticmethod
+    def get_unit_division(numerator, denominator, symbol=None, identifier=None):
+        unit = None
+        if identifier is not None:
+            unit = Unit.with_identifier(identifier)
+        if unit is None:
+            for unit in Unit._units:
+                if isinstance(unit, UnitDivision):
+                    if str(numerator.identifier) == str(unit.numerator.identifier) and \
+                            str(denominator.identifier) == str(unit.denominator.identifier):
+                        return unit
+            unit = UnitDivision(numerator, denominator, symbol, identifier)
+            Unit.__add_unit(unit)
+        return unit
+
+    @staticmethod
+    def get_unit_exponentiation(base, exponent, symbol=None, identifier=None):
+        unit = None
+        if identifier is not None:
+            unit = Unit.with_identifier(identifier)
+        if unit is None:
+            for unit in Unit._units:
+                if isinstance(unit, UnitExponentiation):
+                    if str(base.identifier) == str(unit.base.identifier) and \
+                            exponent == unit.exponent:
+                        return unit
+            unit = UnitExponentiation(base, exponent, symbol, identifier)
+            Unit.__add_unit(unit)
+        return unit
+
     def __init__(self, label=None, symbol=None, dimensions=Dimension(), identifier=None):
         super().__init__(label, symbol, identifier)
         self.dimensions = dimensions
-        Unit.__add_unit(self)
 
     def __str__(self):
         return f'{self.label()}\t{self.symbol()}\t<{self.identifier}>  dim: {self.dimensions}'
@@ -106,8 +176,8 @@ class SingularUnit(Unit):
     def first_ancestor(self):
         if self.baseUnit is None:
             return self, 1.0
-        first_ancester = self.baseUnit.first_ancestor()
-        return first_ancester[0], first_ancester[1] * self.factor
+        first_ancestor = self.baseUnit.first_ancestor()
+        return first_ancestor[0], first_ancestor[1] * self.factor
 
 
 class PrefixedUnit(Unit):
@@ -121,8 +191,8 @@ class PrefixedUnit(Unit):
     def first_ancestor(self):
         if self.baseUnit is None:
             return self, 1.0
-        first_ancester = self.baseUnit.first_ancestor()
-        return first_ancester[0], first_ancester[1] * self.prefix.factor
+        first_ancestor = self.baseUnit.first_ancestor()
+        return first_ancestor[0], first_ancestor[1] * self.prefix.factor
 
 
 class UnitMultiple(SingularUnit):
@@ -157,6 +227,12 @@ class UnitMultiplication(CompoundUnit):
         self.multiplier = multiplier
         self.multiplicand = multiplicand
 
+    def first_ancestor(self):
+        first_ancestor_multiplier = self.multiplier.first_ancestor()
+        first_ancestor_multiplicand = self.multiplicand.first_ancestor()
+        first_ancestor = Unit.get_unit_multiplication(first_ancestor_multiplier[0], first_ancestor_multiplicand[0])
+        return first_ancestor, first_ancestor_multiplier[1] * first_ancestor_multiplicand[1]
+
 
 class UnitDivision(CompoundUnit):
 
@@ -172,7 +248,13 @@ class UnitDivision(CompoundUnit):
             symbol = f'{numerator_str}/{denominator_str}'
         super().__init__(symbol, dimensions, identifier)
         self.numerator = numerator
-        self.multiplicand = denominator
+        self.denominator = denominator
+
+    def first_ancestor(self):
+        first_ancestor_numerator = self.numerator.first_ancestor()
+        first_ancestor_denominator = self.denominator.first_ancestor()
+        first_ancestor = Unit.get_unit_multiplication(first_ancestor_numerator[0], first_ancestor_denominator[0])
+        return first_ancestor, first_ancestor_numerator[1] / first_ancestor_denominator[1]
 
 
 class UnitExponentiation(CompoundUnit):
@@ -187,3 +269,8 @@ class UnitExponentiation(CompoundUnit):
         super().__init__(symbol, dimensions, identifier)
         self.base = base
         self.exponent = exponent
+
+    def first_ancestor(self):
+        first_ancestor_base = self.base.first_ancestor()
+        first_ancestor = Unit.get_unit_exponentiation(first_ancestor_base[0], self.exponent)
+        return first_ancestor, pow(first_ancestor_base[1], self.exponent)

@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="11ebec52-190f-43fd-8288-5324a239a824" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/omlib/unit.py" beforeDir="false" afterPath="$PROJECT_DIR$/omlib/unit.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/test_units.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_units.py" afterDir="false" />
@@ -67,6 +66,21 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="Unittests for test_units.TestUnits.test_unit_multiplication_conversion_1" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <module name="OMlib" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test_units.TestUnits.test_unit_multiplication_conversion_1&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
     <configuration name="Unittests in tests" type="tests" factoryName="Unittests" nameIsGenerated="true">
       <module name="OMlib" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -85,7 +99,13 @@
     <list>
       <item itemvalue="Python.Run" />
       <item itemvalue="Python tests.Unittests in tests" />
+      <item itemvalue="Python tests.Unittests for test_units.TestUnits.test_unit_multiplication_conversion_1" />
     </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python tests.Unittests for test_units.TestUnits.test_unit_multiplication_conversion_1" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -108,7 +128,7 @@
       <workItem from="1572420879530" duration="11839000" />
       <workItem from="1572453140129" duration="3695000" />
       <workItem from="1572536741218" duration="3261000" />
-      <workItem from="1572688497262" duration="9303000" />
+      <workItem from="1572688497262" duration="14538000" />
     </task>
     <servers />
   </component>
@@ -131,19 +151,45 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/omlib/unit.py</url>
-          <line>85</line>
+          <line>155</line>
           <option name="timeStamp" value="9" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/omlib/unit.py</url>
-          <line>106</line>
-          <option name="timeStamp" value="10" />
+          <line>230</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/omlib/unit.py</url>
+          <line>104</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/omlib/unit.py</url>
+          <line>114</line>
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/omlib/unit.py</url>
+          <line>110</line>
+          <option name="timeStamp" value="18" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/tests/test_units.py</url>
+          <line>169</line>
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/omlib/unit.py</url>
+          <line>109</line>
+          <option name="timeStamp" value="20" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/OMlib$Run.coverage" NAME="Run Coverage Results" MODIFIED="1572430629913" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/OMlib$Unittests_in_tests.coverage" NAME="Unittests in tests Coverage Results" MODIFIED="1572701442801" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/OMlib$Unittests_for_test_units_TestUnits_test_unit_multiplication_conversion_1.coverage" NAME="Unittests for test_units.TestUnits.test_unit_multiplication_conversion_1 Coverage Results" MODIFIED="1572721484887" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/OMlib$Unittests_in_tests.coverage" NAME="Unittests in tests Coverage Results" MODIFIED="1572722183497" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
   </component>
 </project>

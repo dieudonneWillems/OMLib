@@ -54,10 +54,10 @@ class Unit(SymbolThing):
         if not can_convert:
             raise DimensionalException("A unit with dimensions {} cannot be converted to a unit with dimensions {}."
                                        .format(from_unit.dimensions, to_unit.dimensions))
-        from_to_base_ancestor = from_unit.__first_ancestor()
-        to_to_base_ancestor = to_unit.__first_ancestor()
+        from_to_base_ancestor = from_unit.first_ancestor()
+        to_to_base_ancestor = to_unit.first_ancestor()
         if str(from_to_base_ancestor[0].identifier) == str(to_to_base_ancestor[0].identifier):
-            return to_to_base_ancestor[1] / from_to_base_ancestor[1]
+            return from_to_base_ancestor[1] / to_to_base_ancestor[1]
         raise UnitConversionException("Cannot convert from {} to {} as they do not have a common ancestor unit."
                                       .format(from_unit, to_unit))
 
@@ -82,7 +82,7 @@ class Unit(SymbolThing):
     def __str__(self):
         return f'{self.label()}\t{self.symbol()}\t<{self.identifier}>  dim: {self.dimensions}'
 
-    def __first_ancestor(self):
+    def first_ancestor(self):
         return self, 1.0
 
 
@@ -103,17 +103,26 @@ class SingularUnit(Unit):
         self.factor = factor
         self.baseUnit = base_unit
 
-    def __first_ancestor(self):
+    def first_ancestor(self):
         if self.baseUnit is None:
             return self, 1.0
-        return self.baseUnit, self.factor
+        first_ancester = self.baseUnit.first_ancestor()
+        return first_ancester[0], first_ancester[1] * self.factor
 
 
 class PrefixedUnit(Unit):
-    def __init__(self, prefix, baseUnit, identifier=None):
-        label = f'{prefix.name}{baseUnit.label()}'
-        symbol = f'{prefix.symbol}{baseUnit.symbol()}'
-        super().__init__(label, symbol, baseUnit.dimensions, identifier)
+    def __init__(self, prefix, base_unit, identifier=None):
+        label = f'{prefix.name}{base_unit.label()}'
+        symbol = f'{prefix.symbol}{base_unit.symbol()}'
+        self.prefix = prefix
+        self.baseUnit = base_unit
+        super().__init__(label, symbol, dimensions=self.baseUnit.dimensions, identifier=identifier)
+
+    def first_ancestor(self):
+        if self.baseUnit is None:
+            return self, 1.0
+        first_ancester = self.baseUnit.first_ancestor()
+        return first_ancester[0], first_ancester[1] * self.prefix.factor
 
 
 class UnitMultiple(SingularUnit):

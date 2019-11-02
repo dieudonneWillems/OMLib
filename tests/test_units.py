@@ -112,11 +112,51 @@ class TestUnits(unittest.TestCase):
         self.assertEqual('http://www.ontology-of-units-of-measure.org/resource/om-2/metre', str(units[0].identifier))
         self.assertEqual(m_dim, units[0].dimensions)
 
-    def test_singular_unit_conversion(self):
+    def test_singular_unit_conversion_1(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = SingularUnit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
         inch = SingularUnit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
         m_to_inch_factor = Unit.conversion_factor(m, inch)
-        self.assertEqual(2.54e-2, m_to_inch_factor)
+        self.assertAlmostEqual(39.3700787, m_to_inch_factor, delta=0.00001)
         inch_to_m_factor = Unit.conversion_factor(inch, m)
-        self.assertEqual(39.3700787, inch_to_m_factor)
+        self.assertAlmostEqual(2.54e-2, inch_to_m_factor, delta=0.00001)
+
+    def test_singular_unit_conversion_2(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = SingularUnit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        inch = SingularUnit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+        feet = SingularUnit('feet', 'ft', base_unit=inch, factor=12, identifier=OM.NAMESPACE + 'feet')
+        m_to_feet_factor = Unit.conversion_factor(m, feet)
+        self.assertAlmostEqual(3.280839895, m_to_feet_factor, delta=0.0001)
+        feet_to_m_factor = Unit.conversion_factor(feet, m)
+        self.assertAlmostEqual(0.3048, feet_to_m_factor, delta=0.0001)
+
+    def test_prefixed_unit_conversion_1(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = SingularUnit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        km = PrefixedUnit(SI.KILO, m, OM.NAMESPACE + 'kilometre')
+        m_to_km_factor = Unit.conversion_factor(m, km)
+        self.assertAlmostEqual(0.001, m_to_km_factor, delta=0.0001)
+        km_to_m_factor = Unit.conversion_factor(km, m)
+        self.assertAlmostEqual(1000.0, km_to_m_factor, delta=0.0001)
+
+    def test_prefixed_unit_conversion_2(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = SingularUnit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        km = PrefixedUnit(SI.KILO, m, OM.NAMESPACE + 'kilometre')
+        inch = SingularUnit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+        feet = SingularUnit('feet', 'ft', base_unit=inch, factor=12, identifier=OM.NAMESPACE + 'feet')
+        feet_to_km_factor = Unit.conversion_factor(feet, km)
+        self.assertAlmostEqual(0.0003048, feet_to_km_factor, delta=0.0001)
+        km_to_feet_factor = Unit.conversion_factor(km, feet)
+        self.assertAlmostEqual(3280.8399 , km_to_feet_factor, delta=0.0001)
+
+    def test_unit_multiple_conversion(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = SingularUnit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        km = PrefixedUnit(SI.KILO, m, OM.NAMESPACE + 'kilometre')
+        km100 = UnitMultiple(km, 100.0, symbol='100km')
+        m_to_km100_factor = Unit.conversion_factor(m, km100)
+        self.assertAlmostEqual(0.000001, m_to_km100_factor, delta=0.0001)
+        km100_to_m_factor = Unit.conversion_factor(km100, m)
+        self.assertAlmostEqual(100000 , km100_to_m_factor, delta=0.0001)

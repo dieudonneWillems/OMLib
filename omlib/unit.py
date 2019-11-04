@@ -2,6 +2,7 @@ from rdflib import Literal, XSD, URIRef
 
 from exceptions.dimensionexception import DimensionalException
 from exceptions.unitconversionexception import UnitConversionException
+from exceptions.unitidentityexception import UnitIdentityException
 from omlib.dimension import Dimension
 from omlib.thing import Thing, SymbolThing
 
@@ -46,7 +47,7 @@ class Unit(SymbolThing):
 
     @staticmethod
     def conversion_factor(from_unit, to_unit):
-        can_convert = Unit.can_covert(from_unit, to_unit)
+        can_convert = Unit.can_convert(from_unit, to_unit)
         if not can_convert:
             raise DimensionalException("A unit with dimensions {} cannot be converted to a unit with dimensions {}."
                                        .format(from_unit.dimensions, to_unit.dimensions))
@@ -58,7 +59,7 @@ class Unit(SymbolThing):
                                       .format(from_unit, to_unit))
 
     @staticmethod
-    def can_covert(from_unit, to_unit):
+    def can_convert(from_unit, to_unit):
         if isinstance(from_unit, Unit) and isinstance(to_unit, Unit):
             if from_unit.dimensions == to_unit.dimensions:
                 return True
@@ -74,7 +75,22 @@ class Unit(SymbolThing):
     def get_singular_unit(label, symbol, dimensions=Dimension(), base_unit=None, factor=1.0, identifier=None):
         unit = None
         if identifier is not None:
-            unit = Unit.with_identifier(identifier)
+            test_unit = Unit.with_identifier(identifier)
+            if test_unit is not None:
+                if not isinstance(test_unit, SingularUnit):
+                    raise UnitIdentityException("The identifier for a SingularUnit has been used earlier"
+                                                " for another type of unit")
+                else:
+                    if base_unit is not None:
+                        base_identifier = str(base_unit.identifier)
+                        test_identifier = str(test_unit.baseUnit.identifier)
+                        if base_identifier != test_identifier:
+                            raise UnitIdentityException("The requested SingularUnit uses a different base unit"
+                                                        " as the earlier defined unit with the same identifier.")
+                        if factor != test_unit.factor:
+                            raise UnitIdentityException("The requested SingularUnit uses a different conversion factor"
+                                                        " as the earlier defined unit with the same identifier.")
+                return test_unit
         if unit is None:
             unit = SingularUnit(label, symbol, dimensions, base_unit, factor, identifier)
             Unit.__add_unit(unit)
@@ -84,7 +100,21 @@ class Unit(SymbolThing):
     def get_prefixed_unit(prefix, base_unit, identifier=None):
         unit = None
         if identifier is not None:
-            unit = Unit.with_identifier(identifier)
+            test_unit = Unit.with_identifier(identifier)
+            if test_unit is not None:
+                if not isinstance(test_unit, PrefixedUnit):
+                    raise UnitIdentityException("The identifier for a PrefixedUnit has been used earlier"
+                                                " for another type of unit")
+                else:
+                    base_identifier = str(base_unit.identifier)
+                    test_identifier = str(test_unit.baseUnit.identifier)
+                    if base_identifier != test_identifier:
+                        raise UnitIdentityException("The requested PrefixedUnit uses a different base unit"
+                                                    " as the earlier defined unit with the same identifier.")
+                    if str(prefix.identifier) != str(test_unit.prefix.identifier):
+                        raise UnitIdentityException("The requested PrefixedUnit uses a different prefix"
+                                                    " as the earlier defined unit with the same identifier.")
+                return test_unit
         if unit is None:
             unit = PrefixedUnit(prefix, base_unit, identifier)
             Unit.__add_unit(unit)
@@ -94,7 +124,18 @@ class Unit(SymbolThing):
     def get_unit_multiple(base_unit, factor=1.0, identifier=None, label=None, symbol=None):
         unit = None
         if identifier is not None:
-            unit = Unit.with_identifier(identifier)
+            test_unit = Unit.with_identifier(identifier)
+            if test_unit is not None:
+                if not isinstance(test_unit, UnitMultiple):
+                    raise UnitIdentityException("The identifier for a UnitMultiple has been used earlier"
+                                                " for another type of unit")
+                else:
+                    base_identifier = str(base_unit.identifier)
+                    test_identifier = str(test_unit.baseUnit.identifier)
+                    if base_identifier != test_identifier:
+                        raise UnitIdentityException("The requested UnitMultiple uses a different base unit"
+                                                    " as the earlier defined unit with the same identifier.")
+                return test_unit
         if unit is None:
             unit = UnitMultiple(base_unit, factor, identifier, label, symbol)
             Unit.__add_unit(unit)
@@ -104,7 +145,18 @@ class Unit(SymbolThing):
     def get_unit_multiplication(multiplier, multiplicand, symbol=None, identifier=None):
         unit = None
         if identifier is not None:
-            unit = Unit.with_identifier(identifier)
+            for test_unit in Unit._units:
+                if str(test_unit.identifier) == str(identifier):
+                    if not isinstance(test_unit, UnitMultiplication):
+                        raise UnitIdentityException("The identifier for a UnitMultiplication has been used earlier"
+                                                    " for another type of unit")
+                    else:
+                        if str(multiplier.identifier) != str(test_unit.multiplier.identifier) or \
+                                str(multiplicand.identifier) != str(test_unit.multiplicand.identifier):
+                            raise UnitIdentityException("The requested UnitMultiplication uses a different pair of"
+                                                        " units as multiplier and multiplicand as the earlier defined"
+                                                        " unit with the same identifier.")
+                    unit = test_unit
         if unit is None:
             for unit in Unit._units:
                 if isinstance(unit, UnitMultiplication):
@@ -119,7 +171,18 @@ class Unit(SymbolThing):
     def get_unit_division(numerator, denominator, symbol=None, identifier=None):
         unit = None
         if identifier is not None:
-            unit = Unit.with_identifier(identifier)
+            for test_unit in Unit._units:
+                if str(test_unit.identifier) == str(identifier):
+                    if not isinstance(test_unit, UnitDivision):
+                        raise UnitIdentityException("The identifier for a UnitDivision has been used earlier"
+                                                    " for another type of unit")
+                    else:
+                        if str(numerator.identifier) != str(test_unit.numerator.identifier) or \
+                                str(denominator.identifier) != str(test_unit.denominator.identifier):
+                            raise UnitIdentityException("The requested UnitDivision uses a different pair of"
+                                                        " units as numerator and denominator as the earlier "
+                                                        "defined unit with the same identifier.")
+                    unit = test_unit
         if unit is None:
             for unit in Unit._units:
                 if isinstance(unit, UnitDivision):
@@ -134,7 +197,19 @@ class Unit(SymbolThing):
     def get_unit_exponentiation(base, exponent, symbol=None, identifier=None):
         unit = None
         if identifier is not None:
-            unit = Unit.with_identifier(identifier)
+            for test_unit in Unit._units:
+                if str(test_unit.identifier) == str(identifier):
+                    if not isinstance(test_unit, UnitExponentiation):
+                        raise UnitIdentityException("The identifier for a UnitExponentiation has been used earlier"
+                                                    " for another type of unit")
+                    else:
+                        if str(base.identifier) != str(test_unit.base.identifier):
+                            raise UnitIdentityException("The requested UnitExponentiation uses a different unit "
+                                                        "as base as the earlier defined unit with the same identifier.")
+                        if exponent != test_unit.exponent:
+                            raise UnitIdentityException("The requested UnitExponentiation uses a different exponent as"
+                                                        " the earlier defined unit with the same identifier.")
+                    unit = test_unit
         if unit is None:
             for unit in Unit._units:
                 if isinstance(unit, UnitExponentiation):
@@ -158,10 +233,11 @@ class Unit(SymbolThing):
 
 class Prefix(object):
 
-    def __init__(self, name, symbol, factor):
+    def __init__(self, name, symbol, factor, identifier):
         self.name = name
         self.symbol = symbol
         self.factor = factor
+        self.identifier = identifier
 
 
 class SingularUnit(Unit):

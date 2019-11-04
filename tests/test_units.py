@@ -265,7 +265,7 @@ class TestUnits(unittest.TestCase):
         gn = Unit.get_singular_unit("gravity", "g", base_unit=ms_2, factor=9.80665)
         kg_ms_2 = Unit.get_unit_multiplication(kg, ms_2)
         n = Unit.get_singular_unit("Newton", "N", base_unit=kg_ms_2, identifier=OM.NAMESPACE + 'Newton')
-        lbf = Unit.get_unit_multiplication(lb, gn, "pound-force", "lbf")
+        lbf = Unit.get_unit_multiplication(lb, gn, "lbf")
         m2 = Unit.get_unit_exponentiation(m, 2)
         n_m2 = Unit.get_unit_division(n, m2)
         pa = Unit.get_singular_unit("Pascal", "Pa", base_unit=n_m2, identifier=OM.NAMESPACE + 'Pascal')

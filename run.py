@@ -46,4 +46,11 @@ if __name__ == '__main__':
     mpkm = UnitDivision(m, km)
     print('Unit Division: {}'.format(mpkm))
 
+    print('---- 1 ----')
+    inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+    print('---- 2 ----')
+    inch2 = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+    print('1: {}'.format(inch))
+    print('2: {}'.format(inch2))
+
 

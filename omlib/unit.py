@@ -23,8 +23,8 @@ class Unit(SymbolThing):
     def with_symbol(symbol):
         get_units = []
         for unit in Unit._units:
-            for usymbol in unit.all_symbols():
-                if str(usymbol) == symbol:
+            for u_symbol in unit.all_symbols():
+                if str(u_symbol) == symbol:
                     get_units.append(unit)
         return get_units
 
@@ -33,6 +33,30 @@ class Unit(SymbolThing):
         for unit in Unit._units:
             if str(unit.identifier) == str(identifier):
                 return unit
+        return None
+
+    @staticmethod
+    def with_multiplication(multiplier, multiplicand):
+        for unit in Unit._units:
+            if isinstance(unit, UnitMultiplication):
+                if unit.multiplier == multiplier and unit.multiplicand == multiplicand:
+                    return unit
+        return None
+
+    @staticmethod
+    def with_division(numerator, denominator):
+        for unit in Unit._units:
+            if isinstance(unit, UnitDivision):
+                if unit.numerator == numerator and unit.denominator == denominator:
+                    return unit
+        return None
+
+    @staticmethod
+    def with_exponentiation(base, exponent):
+        for unit in Unit._units:
+            if isinstance(unit, UnitExponentiation):
+                if unit.base == base and unit.exponent == exponent:
+                    return unit
         return None
 
     @staticmethod
@@ -157,6 +181,12 @@ class Unit(SymbolThing):
                                                         " units as multiplier and multiplicand as the earlier defined"
                                                         " unit with the same identifier.")
                     unit = test_unit
+        unit = Unit.with_multiplication(multiplier, multiplicand)
+        if unit is not None:
+            if identifier is not None:
+                unit.identifier = identifier
+            if symbol is not None:
+                unit.add_symbol(symbol)
         if unit is None:
             for unit in Unit._units:
                 if isinstance(unit, UnitMultiplication):
@@ -183,6 +213,12 @@ class Unit(SymbolThing):
                                                         " units as numerator and denominator as the earlier "
                                                         "defined unit with the same identifier.")
                     unit = test_unit
+        unit = Unit.with_division(numerator, denominator)
+        if unit is not None:
+            if identifier is not None:
+                unit.identifier = identifier
+            if symbol is not None:
+                unit.add_symbol(symbol)
         if unit is None:
             for unit in Unit._units:
                 if isinstance(unit, UnitDivision):
@@ -210,6 +246,12 @@ class Unit(SymbolThing):
                             raise UnitIdentityException("The requested UnitExponentiation uses a different exponent as"
                                                         " the earlier defined unit with the same identifier.")
                     unit = test_unit
+        unit = Unit.with_exponentiation(base, exponent)
+        if unit is not None:
+            if identifier is not None:
+                unit.identifier = identifier
+            if symbol is not None:
+                unit.add_symbol(symbol)
         if unit is None:
             for unit in Unit._units:
                 if isinstance(unit, UnitExponentiation):

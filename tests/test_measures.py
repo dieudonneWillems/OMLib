@@ -3,7 +3,7 @@ import unittest
 from omlib.constants import OM, SI
 from omlib.dimension import Dimension
 from omlib.measure import Measure
-from omlib.unit import Unit
+from omlib.unit import Unit, UnitMultiplication, UnitDivision
 
 
 class TestUnits(unittest.TestCase):
@@ -55,3 +55,70 @@ class TestUnits(unittest.TestCase):
         measure.convert(pa)
         self.assertAlmostEqual(84116, measure.numerical_value, delta=1)
         self.assertEqual(str(OM.NAMESPACE + 'Pascal'), str(measure.unit.identifier))
+
+    def test_add_measures(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        cm = Unit.get_prefixed_unit(SI.CENTI, m, identifier=OM.NAMESPACE + 'centimetre')
+        value_1 = Measure(2, m)
+        value_2 = Measure(50, cm)
+        result_value_1 = value_1 + value_2
+        self.assertAlmostEqual(2.5, result_value_1.numerical_value, delta=0.01)
+        self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_1.unit.identifier))
+        result_value_2 = value_2 + value_1
+        self.assertAlmostEqual(250, result_value_2.numerical_value, delta=0.01)
+        self.assertEqual(str(OM.NAMESPACE + 'centimetre'), str(result_value_2.unit.identifier))
+
+    def test_subtract_measures(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        cm = Unit.get_prefixed_unit(SI.CENTI, m, identifier=OM.NAMESPACE + 'centimetre')
+        value_1 = Measure(2, m)
+        value_2 = Measure(50, cm)
+        result_value_1 = value_1 - value_2
+        self.assertAlmostEqual(1.5, result_value_1.numerical_value, delta=0.01)
+        self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_1.unit.identifier))
+        result_value_2 = value_2 - value_1
+        self.assertAlmostEqual(-150, result_value_2.numerical_value, delta=0.01)
+        self.assertEqual(str(OM.NAMESPACE + 'centimetre'), str(result_value_2.unit.identifier))
+
+    def test_multiply_measures(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
+        value_1 = Measure(2, m)
+        value_2 = Measure(50, s)
+        result_value_1 = value_1 * value_2
+        self.assertAlmostEqual(100, result_value_1.numerical_value, delta=0.01)
+        self.assertTrue(isinstance(result_value_1.unit, UnitMultiplication))
+        self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_1.unit.multiplier.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_1.unit.multiplicand.identifier))
+        result_value_2 = value_2 * value_1
+        self.assertAlmostEqual(100, result_value_2.numerical_value, delta=0.01)
+        self.assertTrue(isinstance(result_value_2.unit, UnitMultiplication))
+        self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_2.unit.multiplicand.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_2.unit.multiplier.identifier))
+        m_s = Unit.get_unit_multiplication(m, s, identifier=OM.NAMESPACE + 'metreSecond')
+        self.assertEqual(str(OM.NAMESPACE + 'metreSecond'), str(result_value_1.unit.identifier))
+
+    def test_divide_measures(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
+        value_1 = Measure(2, m)
+        value_2 = Measure(50, s)
+        result_value_1 = value_1 / value_2
+        self.assertAlmostEqual(0.04, result_value_1.numerical_value, delta=0.01)
+        self.assertTrue(isinstance(result_value_1.unit, UnitDivision))
+        self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_1.unit.numerator.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_1.unit.denominator.identifier))
+        result_value_2 = value_2 / value_1
+        self.assertAlmostEqual(25, result_value_2.numerical_value, delta=0.01)
+        self.assertTrue(isinstance(result_value_2.unit, UnitDivision))
+        self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_2.unit.numerator.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_2.unit.denominator.identifier))
+        m_s = Unit.get_unit_division(m, s, identifier=OM.NAMESPACE + 'metrePerSecond')
+        self.assertEqual(str(OM.NAMESPACE + 'metrePerSecond'), str(result_value_1.unit.identifier))
+

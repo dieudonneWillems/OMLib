@@ -14,8 +14,8 @@ class Unit(SymbolThing):
     def with_label(label):
         get_units = []
         for unit in Unit._units:
-            for ulabel in unit.all_labels():
-                if str(ulabel) == label:
+            for u_label in unit.all_labels():
+                if str(u_label) == label:
                     get_units.append(unit)
         return get_units
 
@@ -269,6 +269,14 @@ class Unit(SymbolThing):
     def __str__(self):
         return f'{self.label()}\t{self.symbol()}\t<{self.identifier}>  dim: {self.dimensions}'
 
+    def __eq__(self, other):
+        if isinstance(other, Unit):
+            return str(self.identifier) == str(other.identifier)
+        return False
+
+    def __ne__(self, other):
+        return not (self == other)
+
     def first_ancestor(self):
         return self, 1.0
 
@@ -280,6 +288,14 @@ class Prefix(object):
         self.symbol = symbol
         self.factor = factor
         self.identifier = identifier
+
+    def __eq__(self, other):
+        if isinstance(other, Prefix):
+            return str(self.identifier) == str(other.identifier)
+        return False
+
+    def __ne__(self, other):
+        return not (self == other)
 
 
 class SingularUnit(Unit):
@@ -297,8 +313,22 @@ class SingularUnit(Unit):
         first_ancestor = self.baseUnit.first_ancestor()
         return first_ancestor[0], first_ancestor[1] * self.factor
 
+    def __eq__(self, other):
+        if isinstance(other, SingularUnit):
+            if self.identifier is None or other.identifier is None:
+                if self.baseUnit is None and other.baseUnit == self:
+                    return True
+                if other.baseUnit is None and self.baseUnit == other:
+                    return True
+                if other.baseUnit == self.baseUnit and other.factor == self.factor:
+                    return True
+            else:
+                return str(self.identifier) == str(other.identifier)
+        return False
+
 
 class PrefixedUnit(Unit):
+
     def __init__(self, prefix, base_unit, identifier=None):
         label = f'{prefix.name}{base_unit.label()}'
         symbol = f'{prefix.symbol}{base_unit.symbol()}'
@@ -311,6 +341,15 @@ class PrefixedUnit(Unit):
             return self, 1.0
         first_ancestor = self.baseUnit.first_ancestor()
         return first_ancestor[0], first_ancestor[1] * self.prefix.factor
+
+    def __eq__(self, other):
+        if isinstance(other, PrefixedUnit):
+            if self.identifier is None or other.identifier is None:
+                if other.baseUnit == self.baseUnit and other.prefix == self.prefix:
+                    return True
+            else:
+                return str(self.identifier) == str(other.identifier)
+        return False
 
 
 class UnitMultiple(SingularUnit):
@@ -351,6 +390,17 @@ class UnitMultiplication(CompoundUnit):
         first_ancestor = Unit.get_unit_multiplication(first_ancestor_multiplier[0], first_ancestor_multiplicand[0])
         return first_ancestor, first_ancestor_multiplier[1] * first_ancestor_multiplicand[1]
 
+    def __eq__(self, other):
+        if isinstance(other, UnitMultiplication):
+            if self.identifier is None or other.identifier is None:
+                if other.multiplier == self.multiplier and other.multiplicand == self.multiplicand:
+                    return True
+                if other.multiplier == self.multiplicand and other.multiplicand == self.multiplier:
+                    return True
+            else:
+                return str(self.identifier) == str(other.identifier)
+        return False
+
 
 class UnitDivision(CompoundUnit):
 
@@ -374,6 +424,15 @@ class UnitDivision(CompoundUnit):
         first_ancestor = Unit.get_unit_multiplication(first_ancestor_numerator[0], first_ancestor_denominator[0])
         return first_ancestor, first_ancestor_numerator[1] / first_ancestor_denominator[1]
 
+    def __eq__(self, other):
+        if isinstance(other, UnitDivision):
+            if self.identifier is None or other.identifier is None:
+                if other.numerator == self.numerator and other.denominator == self.denominator:
+                    return True
+            else:
+                return str(self.identifier) == str(other.identifier)
+        return False
+
 
 class UnitExponentiation(CompoundUnit):
 
@@ -392,3 +451,12 @@ class UnitExponentiation(CompoundUnit):
         first_ancestor_base = self.base.first_ancestor()
         first_ancestor = Unit.get_unit_exponentiation(first_ancestor_base[0], self.exponent)
         return first_ancestor, pow(first_ancestor_base[1], self.exponent)
+
+    def __eq__(self, other):
+        if isinstance(other, UnitExponentiation):
+            if self.identifier is None or other.identifier is None:
+                if other.base == self.base and other.exponent == self.exponent:
+                    return True
+            else:
+                return str(self.identifier) == str(other.identifier)
+        return False

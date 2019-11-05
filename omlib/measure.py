@@ -43,7 +43,7 @@ class Measure(Thing):
             return new_value == other.numerical_value
         return False
 
-    def __ne_(self, other):
+    def __ne__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
             return new_value != other.numerical_value

@@ -122,3 +122,42 @@ class TestUnits(unittest.TestCase):
         m_s = Unit.get_unit_division(m, s, identifier=OM.NAMESPACE + 'metrePerSecond')
         self.assertEqual(str(OM.NAMESPACE + 'metrePerSecond'), str(result_value_1.unit.identifier))
 
+    def test_equality_measures_equal(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        hm = Unit.get_prefixed_unit(SI.HECTO, m, identifier=OM.NAMESPACE + 'hectometre')
+        value_1 = Measure(200, m)
+        value_2 = Measure(2, hm)
+        self.assertTrue(value_1 == value_2)
+        self.assertFalse(value_1 != value_2)
+        self.assertFalse(value_1 < value_2)
+        self.assertFalse(value_1 > value_2)
+        self.assertTrue(value_1 <= value_2)
+        self.assertTrue(value_1 >= value_2)
+
+    def test_equality_measures_greater_then(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        hm = Unit.get_prefixed_unit(SI.HECTO, m, identifier=OM.NAMESPACE + 'hectometre')
+        value_1 = Measure(210, m)
+        value_2 = Measure(2, hm)
+        self.assertFalse(value_1 == value_2)
+        self.assertTrue(value_1 != value_2)
+        self.assertFalse(value_1 < value_2)
+        self.assertTrue(value_1 > value_2)
+        self.assertFalse(value_1 <= value_2)
+        self.assertTrue(value_1 >= value_2)
+
+    def test_equality_measures_smaller_then(self):
+        m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
+        m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
+        hm = Unit.get_prefixed_unit(SI.HECTO, m, identifier=OM.NAMESPACE + 'hectometre')
+        value_1 = Measure(190, m)
+        value_2 = Measure(2, hm)
+        self.assertFalse(value_1 == value_2)
+        self.assertTrue(value_1 != value_2)
+        self.assertTrue(value_1 < value_2)
+        self.assertFalse(value_1 > value_2)
+        self.assertTrue(value_1 <= value_2)
+        self.assertFalse(value_1 >= value_2)
+

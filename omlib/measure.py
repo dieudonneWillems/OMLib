@@ -30,11 +30,47 @@ class Measure(Thing):
     def __str__(self):
         return f'{self.numerical_value} {self.unit.symbol()}'
 
-    def __eq__(self, other):
+    def __new_value_for_comparisson(self, other):
         if isinstance(other, Measure):
             factor = Unit.conversion_factor(self.unit, other.unit)
             new_value = self.numerical_value * factor
+            return new_value
+        return None
+
+    def __eq__(self, other):
+        new_value = self.__new_value_for_comparisson(other)
+        if new_value is not None:
             return new_value == other.numerical_value
+        return False
+
+    def __ne_(self, other):
+        new_value = self.__new_value_for_comparisson(other)
+        if new_value is not None:
+            return new_value != other.numerical_value
+        return False
+
+    def __lt__(self, other):
+        new_value = self.__new_value_for_comparisson(other)
+        if new_value is not None:
+            return new_value < other.numerical_value
+        return False
+
+    def __le__(self, other):
+        new_value = self.__new_value_for_comparisson(other)
+        if new_value is not None:
+            return new_value <= other.numerical_value
+        return False
+
+    def __gt__(self, other):
+        new_value = self.__new_value_for_comparisson(other)
+        if new_value is not None:
+            return new_value > other.numerical_value
+        return False
+
+    def __ge__(self, other):
+        new_value = self.__new_value_for_comparisson(other)
+        if new_value is not None:
+            return new_value >= other.numerical_value
         return False
 
     def __add__(self, other):

@@ -138,14 +138,14 @@ class TestUnits(unittest.TestCase):
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
         myl = Unit.get_singular_unit('my length unit', 'myl', m_dim, identifier=OM.NAMESPACE + 'myl')
         try:
-            m_to_myl_factor = Unit.conversion_factor(m, myl)
+            Unit.conversion_factor(m, myl)
             self.fail("Singular units that do not have a common base should not be converted between each other")
         except UnitConversionException as error:
             self.assertTrue(True)
         km = Unit.get_prefixed_unit(SI.KILO, m, OM.NAMESPACE + 'kilometre')
         myl67 = Unit.get_unit_multiple(myl, 67.0, symbol='67myl')
         try:
-            km_to_myl67_factor = Unit.conversion_factor(km, myl67)
+            Unit.conversion_factor(km, myl67)
             self.fail("Singular units that do not have a common base should not be converted between each other")
         except UnitConversionException as error:
             self.assertTrue(True)
@@ -158,12 +158,12 @@ class TestUnits(unittest.TestCase):
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
         s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
         try:
-            m_to_s_factor = Unit.conversion_factor(m, s)
+            Unit.conversion_factor(m, s)
             self.fail("Singular units that have different dimension cannot be converted between each other.")
         except DimensionalException as error:
             self.assertTrue(True)
         try:
-            s_to_m_factor = Unit.conversion_factor(s, m)
+            Unit.conversion_factor(s, m)
             self.fail("Singular units that have different dimension cannot be converted between each other.")
         except DimensionalException as error:
             self.assertTrue(True)

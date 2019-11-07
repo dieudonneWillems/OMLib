@@ -335,3 +335,34 @@ class TestUnits(unittest.TestCase):
         self.assertAlmostEqual(10.0, m2_10_to_m2, delta=0.001)
         m2_to_m2_10 = Unit.conversion_factor(m2, m2_10)
         self.assertAlmostEqual(0.1, m2_to_m2_10, delta=0.00001)
+
+    def test_base_units_1(self):
+        m = SI.METRE
+        km = Unit.get_prefixed_unit(SI.KILO, m)
+        base = Unit.get_base_units(km, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m.identifier, base.identifier)
+        self.assertNotEqual(km.identifier, base.identifier)
+
+    def test_base_units_2(self):
+        m = SI.METRE
+        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+        base = Unit.get_base_units(inch, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m.identifier, base.identifier)
+        self.assertNotEqual(inch.identifier, base.identifier)
+
+    def test_base_units_3(self):
+        m = SI.METRE
+        km = Unit.get_prefixed_unit(SI.KILO, m)
+        km100 = Unit.get_unit_multiple(km, 100, label="100 kilometre", symbol="100km")
+        base = Unit.get_base_units(km100, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m.identifier, base.identifier)
+        self.assertNotEqual(km100.identifier, base.identifier)
+
+    def test_base_units_4(self):
+        km = Unit.get_prefixed_unit(SI.KILO, SI.METRE)
+        hour = Unit.get_singular_unit("hour", "h", base_unit=SI.SECOND, factor=3600)
+        m_s = Unit.get_unit_division(SI.METRE, SI.SECOND)
+        km_h = Unit.get_unit_division(km, hour)
+        base = Unit.get_base_units(km_h, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m_s.identifier, base.identifier)
+        self.assertNotEqual(km_h.identifier, base.identifier)

@@ -68,3 +68,16 @@ class JEDEC:
     KILO = Prefix('kilo', 'k', pow(2, 10), OM.NAMESPACE + 'jedec-kilo')
     MEGA = Prefix('mega', 'M', pow(2, 20), OM.NAMESPACE + 'jedec-mega')
     GIGA = Prefix('giga', 'G', pow(2, 30), OM.NAMESPACE + 'jedec-giga')
+
+
+class IMPERIAL:
+    SYSTEM_OF_UNITS = "IMPERIAL"
+
+    # Imperial Base uits
+    YARD = Unit.get_singular_unit('yard', 'yd', base_unit=SI.METRE, factor=0.9144, identifier=OM.NAMESPACE + 'yard',
+                                  system_of_Units=SYSTEM_OF_UNITS, is_base_unit=True)
+    POUND = Unit.get_singular_unit('pound', 'lb', base_unit=SI.KILOGRAM, factor=0.45359237,
+                                   identifier=OM.NAMESPACE + 'pound', system_of_Units=SYSTEM_OF_UNITS,
+                                   is_base_unit=True)
+
+

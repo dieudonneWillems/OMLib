@@ -78,20 +78,20 @@ class Unit(SymbolThing):
                 if unit.isBaseUnit and unit.systemOfUnits == in_system_of_units:
                     return unit
         if isinstance(for_unit, UnitMultiplication):
-            base_multiplier = Unit.get_base_units(for_unit.multiplier)
-            base_multiplicand = Unit.get_base_units(for_unit.multiplicand)
+            base_multiplier = Unit.get_base_units(for_unit.multiplier, in_system_of_units)
+            base_multiplicand = Unit.get_base_units(for_unit.multiplicand, in_system_of_units)
             if base_multiplier is not None and base_multiplicand is not None:
                 unit = Unit.get_unit_multiplication(base_multiplier, base_multiplicand,
                                                     system_of_Units=in_system_of_units)
                 return unit
         if isinstance(for_unit, UnitDivision):
-            base_numerator = Unit.get_base_units(for_unit.numerator)
-            base_denominator = Unit.get_base_units(for_unit.denominator)
+            base_numerator = Unit.get_base_units(for_unit.numerator, in_system_of_units)
+            base_denominator = Unit.get_base_units(for_unit.denominator, in_system_of_units)
             if base_numerator is not None and base_denominator is not None:
                 unit = Unit.get_unit_division(base_numerator, base_denominator, system_of_Units=in_system_of_units)
                 return unit
         if isinstance(for_unit, UnitExponentiation):
-            base_base = Unit.get_base_units(for_unit.base)
+            base_base = Unit.get_base_units(for_unit.base, in_system_of_units)
             if base_base is not None:
                 unit = Unit.get_unit_exponentiation(base_base, for_unit.exponent, system_of_Units=in_system_of_units)
                 return unit
@@ -253,7 +253,8 @@ class Unit(SymbolThing):
                                                     " as the earlier defined unit with the same identifier.")
                 return test_unit
         if unit is None:
-            unit = PrefixedUnit(prefix, base_unit, identifier)
+            unit = PrefixedUnit(prefix, base_unit, identifier, system_of_Units=system_of_Units,
+                                is_base_unit=is_base_unit)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit

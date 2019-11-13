@@ -2,7 +2,7 @@ import unittest
 
 from exceptions.dimensionexception import DimensionalException
 from exceptions.unitconversionexception import UnitConversionException
-from omlib.constants import OM, SI
+from omlib.constants import OM, SI, IMPERIAL
 from omlib.dimension import Dimension
 from omlib.unit import SingularUnit, PrefixedUnit, UnitMultiple, UnitDivision, UnitMultiplication, UnitExponentiation, \
     Unit
@@ -366,3 +366,45 @@ class TestUnits(unittest.TestCase):
         base = Unit.get_base_units(km_h, SI.SYSTEM_OF_UNITS)
         self.assertEqual(m_s.identifier, base.identifier)
         self.assertNotEqual(km_h.identifier, base.identifier)
+
+    def test_base_units_imperial_1(self):
+        m = SI.METRE
+        yd = IMPERIAL.YARD
+        base = Unit.get_base_units(m, IMPERIAL.SYSTEM_OF_UNITS)
+        self.assertEqual(yd.identifier, base.identifier)
+        self.assertNotEqual(m.identifier, base.identifier)
+
+    def test_base_units_imperial_2(self):
+        kg = SI.KILOGRAM
+        lb = IMPERIAL.POUND
+        base = Unit.get_base_units(kg, IMPERIAL.SYSTEM_OF_UNITS)
+        self.assertEqual(lb.identifier, base.identifier)
+        self.assertNotEqual(kg.identifier, base.identifier)
+
+    def test_base_units_imperial_3(self):
+        m = SI.METRE
+        yd = IMPERIAL.YARD
+        base = Unit.get_base_units(yd, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m.identifier, base.identifier)
+        self.assertNotEqual(yd.identifier, base.identifier)
+
+    def test_base_units_imperial_4(self):
+        kg = SI.KILOGRAM
+        lb = IMPERIAL.POUND
+        base = Unit.get_base_units(lb, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(kg.identifier, base.identifier)
+        self.assertNotEqual(lb.identifier, base.identifier)
+
+    def test_base_units_imperial_5(self):
+        kg = SI.KILOGRAM
+        lb = IMPERIAL.POUND
+        m = SI.METRE
+        yd = IMPERIAL.YARD
+        kg_m = Unit.get_unit_division(kg, m)
+        lb_yd = Unit.get_unit_division(lb, yd)
+        base = Unit.get_base_units(lb_yd, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(kg_m, base)
+        self.assertNotEqual(lb_yd, base)
+        base2 = Unit.get_base_units(kg_m, IMPERIAL.SYSTEM_OF_UNITS)
+        self.assertEqual(lb_yd, base2)
+        self.assertNotEqual(kg_m, base2)

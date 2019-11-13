@@ -36,20 +36,20 @@ class SI:
 
     # SI Base Units
     SECOND = Unit.get_singular_unit('second', 's', Dimension(1, 0, 0, 0, 0, 0, 0), identifier=OM.NAMESPACE + 'second',
-                                    system_of_Units=SYSTEM_OF_UNITS, is_base_unit=True)
+                                    system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
     METRE = Unit.get_singular_unit('metre', 'm', Dimension(0, 1, 0, 0, 0, 0, 0), identifier=OM.NAMESPACE + 'metre',
-                                   system_of_Units=SYSTEM_OF_UNITS, is_base_unit=True)
+                                   system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
     GRAM = Unit.get_singular_unit('gram', 'g', Dimension(0, 0, 1, 0, 0, 0, 0), identifier=OM.NAMESPACE + 'gram')
-    KILOGRAM = Unit.get_prefixed_unit(KILO, GRAM, identifier=OM.NAMESPACE + 'kilogram', system_of_Units=SYSTEM_OF_UNITS,
+    KILOGRAM = Unit.get_prefixed_unit(KILO, GRAM, identifier=OM.NAMESPACE + 'kilogram', system_of_units=SYSTEM_OF_UNITS,
                                       is_base_unit=True)
     AMPERE = Unit.get_singular_unit('ampere', 'A', Dimension(0, 0, 0, 1, 0, 0, 0), identifier=OM.NAMESPACE + 'ampere',
-                                    system_of_Units=SYSTEM_OF_UNITS, is_base_unit=True)
+                                    system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
     KELVIN = Unit.get_singular_unit('kelvin', 'K', Dimension(0, 0, 0, 0, 1, 0, 0), identifier=OM.NAMESPACE + 'kelvin',
-                                    system_of_Units=SYSTEM_OF_UNITS, is_base_unit=True)
+                                    system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
     MOLE = Unit.get_singular_unit('mole', 'mol', Dimension(0, 0, 0, 0, 0, 1, 0), identifier=OM.NAMESPACE + 'mole',
-                                  system_of_Units=SYSTEM_OF_UNITS, is_base_unit=True)
+                                  system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
     CANDELA = Unit.get_singular_unit('candela', 'cd', Dimension(0, 0, 0, 0, 0, 0, 1),
-                                     identifier=OM.NAMESPACE + 'candela', system_of_Units=SYSTEM_OF_UNITS,
+                                     identifier=OM.NAMESPACE + 'candela', system_of_units=SYSTEM_OF_UNITS,
                                      is_base_unit=True)
 
 
@@ -75,9 +75,9 @@ class IMPERIAL:
 
     # Imperial Base uits
     YARD = Unit.get_singular_unit('yard', 'yd', base_unit=SI.METRE, factor=0.9144, identifier=OM.NAMESPACE + 'yard',
-                                  system_of_Units=SYSTEM_OF_UNITS, is_base_unit=True)
+                                  system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
     POUND = Unit.get_singular_unit('pound', 'lb', base_unit=SI.KILOGRAM, factor=0.45359237,
-                                   identifier=OM.NAMESPACE + 'pound', system_of_Units=SYSTEM_OF_UNITS,
+                                   identifier=OM.NAMESPACE + 'pound', system_of_units=SYSTEM_OF_UNITS,
                                    is_base_unit=True)
 
 

@@ -161,3 +161,15 @@ class TestUnits(unittest.TestCase):
         self.assertTrue(value_1 <= value_2)
         self.assertFalse(value_1 >= value_2)
 
+    def test_conversion_to_base_units(self):
+        m = SI.METRE
+        hm = Unit.get_prefixed_unit(SI.HECTO, m, identifier=OM.NAMESPACE + 'hectometre')
+        s = SI.SECOND
+        hour = Unit.get_singular_unit('hour', 'h', base_unit=s, factor=3600)
+        m_s = Unit.get_unit_division(m, s)
+        hm_hour = Unit.get_unit_division(hm, hour)
+        measure = Measure(2.4,hm_hour)
+        measure.convert_to_base_units()
+        self.assertEqual(m_s, measure.unit)
+        self.assertAlmostEqual(0.0667, measure.numerical_value, delta=0.0001)
+

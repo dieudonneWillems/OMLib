@@ -1,4 +1,5 @@
 from exceptions.dimensionexception import DimensionalException
+from omlib.constants import SI
 from omlib.thing import Thing
 from omlib.unit import Unit
 
@@ -15,6 +16,14 @@ class Measure(Thing):
         new_measure.convert(to_unit)
         return new_measure
 
+    @staticmethod
+    def create_by_converting_to_base_unit(measure, in_system_of_units=SI):
+        if not isinstance(measure, Measure):
+            raise ValueError("The parameter to the convert method is not of the correct type (Measure).")
+        new_measure = Measure(measure.numerical_value, measure.unit)
+        new_measure.convert_to_base_units(in_system_of_units)
+        return new_measure
+
     def __init__(self, numerical_value, unit, identifier=None):
         super().__init__(identifier=identifier)
         self.numerical_value = numerical_value
@@ -26,6 +35,10 @@ class Measure(Thing):
         factor = Unit.conversion_factor(self.unit, to_unit)
         self.numerical_value = self.numerical_value * factor
         self.unit = to_unit
+
+    def convert_to_base_units(self, in_system_of_units=SI.SYSTEM_OF_UNITS):
+        base = Unit.get_base_units(self.unit, in_system_of_units)
+        self.convert(base)
 
     def __str__(self):
         return f'{self.numerical_value} {self.unit.symbol()}'

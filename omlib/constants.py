@@ -1,3 +1,4 @@
+import rdflib
 from rdflib import URIRef
 
 from omlib.dimension import Dimension
@@ -5,7 +6,7 @@ from omlib.unit import Prefix, Unit
 
 
 class OM:
-    NAMESPACE = 'http://www.ontology-of-units-of-measure.org/resource/om-2/'
+    NAMESPACE = rdflib.Namespace('http://www.ontology-of-units-of-measure.org/resource/om-2/')
     LENGTH_DIMENSION = URIRef(NAMESPACE + 'length-Dimension')
 
 

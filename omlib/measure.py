@@ -1,7 +1,9 @@
+import math
+
 from exceptions.dimensionexception import DimensionalException
 from omlib.constants import SI
 from omlib.thing import Thing
-from omlib.unit import Unit
+from omlib.unit import Unit, PrefixedUnit, SingularUnit
 
 
 class Measure(Thing):
@@ -39,6 +41,31 @@ class Measure(Thing):
     def convert_to_base_units(self, in_system_of_units=SI.SYSTEM_OF_UNITS):
         base = Unit.get_base_units(self.unit, in_system_of_units)
         self.convert(base)
+
+    def convert_to_convenient_units(self, system_of_units=None, use_prefixes=True):
+        if system_of_units is None:
+            system_of_units = self.unit.systemOfUnits
+        test_units = self.unit.with_dimensions(self.unit.dimensions, in_system_of_units=system_of_units)
+        selected_unit = self.unit
+        log_selected_value = Measure.__get_log_value(self.numerical_value, selected_unit)
+        for test_unit in test_units:
+            if use_prefixes or not isinstance(test_unit, PrefixedUnit):
+                factor = Unit.conversion_factor(self.unit, test_unit)
+                value = abs(self.numerical_value * factor)
+                log_value = Measure.__get_log_value(value, test_unit)
+                if log_value < log_selected_value:
+                    log_selected_value = log_value
+                    selected_unit = test_unit
+        self.convert(selected_unit)
+
+    @staticmethod
+    def __get_log_value(value, unit):
+        log_value = abs(math.log10(value))
+        if value < 1:
+            log_value = log_value + 2
+        if not isinstance(unit, SingularUnit):
+            log_value = log_value + 1
+        return log_value
 
     def __str__(self):
         return f'{self.numerical_value} {self.unit.symbol()}'

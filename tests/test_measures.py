@@ -1,6 +1,6 @@
 import unittest
 
-from omlib.constants import OM, SI
+from omlib.constants import OM, SI, IMPERIAL
 from omlib.dimension import Dimension
 from omlib.measure import Measure
 from omlib.unit import Unit, UnitMultiplication, UnitDivision
@@ -99,7 +99,7 @@ class TestUnits(unittest.TestCase):
         self.assertTrue(isinstance(result_value_2.unit, UnitMultiplication))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_2.unit.multiplicand.identifier))
         self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_2.unit.multiplier.identifier))
-        m_s = Unit.get_unit_multiplication(m, s, identifier=OM.NAMESPACE + 'metreSecond')
+        Unit.get_unit_multiplication(m, s, identifier=OM.NAMESPACE + 'metreSecond')
         self.assertEqual(str(OM.NAMESPACE + 'metreSecond'), str(result_value_1.unit.identifier))
 
     def test_divide_measures(self):
@@ -119,7 +119,7 @@ class TestUnits(unittest.TestCase):
         self.assertTrue(isinstance(result_value_2.unit, UnitDivision))
         self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_2.unit.numerator.identifier))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_2.unit.denominator.identifier))
-        m_s = Unit.get_unit_division(m, s, identifier=OM.NAMESPACE + 'metrePerSecond')
+        Unit.get_unit_division(m, s, identifier=OM.NAMESPACE + 'metrePerSecond')
         self.assertEqual(str(OM.NAMESPACE + 'metrePerSecond'), str(result_value_1.unit.identifier))
 
     def test_equality_measures_equal(self):
@@ -168,8 +168,76 @@ class TestUnits(unittest.TestCase):
         hour = Unit.get_singular_unit('hour', 'h', base_unit=s, factor=3600)
         m_s = Unit.get_unit_division(m, s)
         hm_hour = Unit.get_unit_division(hm, hour)
-        measure = Measure(2.4,hm_hour)
+        measure = Measure(2.4, hm_hour)
         measure.convert_to_base_units()
         self.assertEqual(m_s, measure.unit)
         self.assertAlmostEqual(0.0667, measure.numerical_value, delta=0.0001)
 
+    def test_conversion_to_convenient_unit_1(self):
+        m = SI.METRE
+        um = Unit.get_prefixed_unit(SI.MICRO, m)
+        mm = Unit.get_prefixed_unit(SI.MILLI, m)
+        Unit.get_prefixed_unit(SI.CENTI, m)
+        Unit.get_prefixed_unit(SI.DECI, m)
+        Unit.get_prefixed_unit(SI.DECA, m)
+        Unit.get_prefixed_unit(SI.HECTO, m)
+        km = Unit.get_prefixed_unit(SI.KILO, m)
+        m1 = Measure(0.0043, m)
+        m1.convert_to_convenient_units()
+        self.assertEqual(mm, m1.unit)
+        self.assertAlmostEqual(4.3, m1.numerical_value, delta=0.001)
+        m2 = Measure(0.0000893, m)
+        m2.convert_to_convenient_units()
+        self.assertEqual(um, m2.unit)
+        self.assertAlmostEqual(89.3, m2.numerical_value, delta=0.001)
+        m5 = Measure(0.0002893, m)
+        m5.convert_to_convenient_units()
+        self.assertEqual(um, m5.unit)
+        self.assertAlmostEqual(289.3, m5.numerical_value, delta=0.001)
+        m3 = Measure(203324.2434, m)
+        m3.convert_to_convenient_units()
+        self.assertEqual(km, m3.unit)
+        self.assertAlmostEqual(203.3242434, m3.numerical_value, delta=0.00000001)
+        m4 = Measure(203324.2434, m)
+        m4.convert_to_convenient_units(use_prefixes=False)
+        self.assertEqual(m, m4.unit)
+        self.assertAlmostEqual(203324.2434, m4.numerical_value, delta=0.00001)
+
+    def test_conversion_to_convenient_unit_2(self):
+        s2 = Unit.get_unit_exponentiation(SI.SECOND, 2)
+        m1_s2 = Unit.get_unit_multiplication(SI.METRE, s2)
+        kg_m1_s2 = Unit.get_unit_division(SI.KILOGRAM, m1_s2)
+        Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2)
+        m1 = Measure(12.343, kg_m1_s2)
+        m1.convert_to_convenient_units()
+        self.assertEqual(kg_m1_s2, m1.unit)  # Pa not in correct system of units
+        self.assertAlmostEqual(12.343, m1.numerical_value, delta=0.00001)
+        m2 = Measure(12.343, kg_m1_s2)
+        m2.convert_to_convenient_units(system_of_units=SI.SYSTEM_OF_UNITS)
+        self.assertEqual(kg_m1_s2, m2.unit)
+        self.assertAlmostEqual(12.343, m2.numerical_value, delta=0.00001)
+        pa2 = Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2, system_of_units=SI.SYSTEM_OF_UNITS)
+        m3 = Measure(12.343, kg_m1_s2)
+        m3.convert_to_convenient_units()
+        self.assertEqual(pa2, m3.unit)
+        self.assertAlmostEqual(12.343, m3.numerical_value, delta=0.00001)
+        self.assertNotEqual(kg_m1_s2, m3.unit)
+
+    def test_conversion_to_convenient_unit_3(self):
+        m = SI.METRE
+        Unit.get_prefixed_unit(SI.MICRO, m)
+        Unit.get_prefixed_unit(SI.MILLI, m)
+        Unit.get_prefixed_unit(SI.CENTI, m)
+        Unit.get_prefixed_unit(SI.DECI, m)
+        Unit.get_prefixed_unit(SI.DECA, m)
+        Unit.get_prefixed_unit(SI.HECTO, m)
+        Unit.get_prefixed_unit(SI.KILO, m)
+        yd = IMPERIAL.YARD
+        m2 = Measure(1, yd)
+        m2.convert_to_convenient_units()
+        self.assertEqual(yd, m2.unit)
+        self.assertAlmostEqual(1, m2.numerical_value, delta=0.00001)
+        m1 = Measure(0.95, m)
+        m1.convert_to_convenient_units(use_prefixes=False)
+        self.assertEqual(m, m1.unit)
+        self.assertAlmostEqual(0.95, m1.numerical_value, delta=0.00001)

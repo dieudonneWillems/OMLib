@@ -1,10 +1,10 @@
 import unittest
 
-from exceptions.dimensionexception import DimensionalException
-from exceptions.unitconversionexception import UnitConversionException
+from omlib.exceptions.dimensionexception import DimensionalException
+from omlib.exceptions.unitconversionexception import UnitConversionException
 from omlib.constants import OM, SI, IMPERIAL
 from omlib.dimension import Dimension
-from omlib.unit import SingularUnit, PrefixedUnit, UnitMultiple, UnitDivision, UnitMultiplication, UnitExponentiation, \
+from omlib.unit import UnitDivision, UnitExponentiation, \
     Unit
 
 

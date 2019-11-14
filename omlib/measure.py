@@ -1,7 +1,7 @@
 import math
 
-from exceptions.dimensionexception import DimensionalException
 from omlib.constants import SI
+from omlib.exceptions.dimensionexception import DimensionalException
 from omlib.thing import Thing
 from omlib.unit import Unit, PrefixedUnit, SingularUnit
 

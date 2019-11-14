@@ -1,4 +1,4 @@
-from exceptions.dimensionexception import DimensionalException
+from omlib.exceptions import DimensionalException
 from omlib.constants import OM, SI
 from omlib.dimension import Dimension
 from omlib.unit import Unit, PrefixedUnit, SingularUnit, UnitMultiple, UnitDivision

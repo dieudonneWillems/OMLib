@@ -1,7 +1,7 @@
 import unittest
 
-from exceptions.dimensionexception import DimensionalException
 from omlib.dimension import Dimension
+from omlib.exceptions.dimensionexception import DimensionalException
 
 
 class TestDimensions(unittest.TestCase):

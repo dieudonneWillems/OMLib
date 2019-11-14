@@ -1,10 +1,10 @@
-from rdflib import Literal, XSD, URIRef
+from rdflib import URIRef
 
-from exceptions.dimensionexception import DimensionalException
-from exceptions.unitconversionexception import UnitConversionException
-from exceptions.unitidentityexception import UnitIdentityException
+from omlib.exceptions.dimensionexception import DimensionalException
+from omlib.exceptions.unitconversionexception import UnitConversionException
+from omlib.exceptions.unitidentityexception import UnitIdentityException
 from omlib.dimension import Dimension
-from omlib.thing import Thing, SymbolThing
+from omlib.thing import SymbolThing
 
 
 class Unit(SymbolThing):

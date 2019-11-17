@@ -2,6 +2,7 @@ from rdflib import URIRef
 
 from omlib.dimension import Dimension
 from omlib.exceptions.dimensionexception import DimensionalException
+from omlib.exceptions.unitconversionexception import ScaleConversionException
 from omlib.exceptions.unitidentityexception import ScaleIdentityException
 from omlib.thing import Thing
 from omlib.unit import Unit
@@ -74,6 +75,41 @@ class Scale(Thing):
         scale = Scale._add_when_not_in_cache(scale)
         return scale
 
+    @staticmethod
+    def conversion_factor(from_scale, to_scale):
+        if (isinstance(from_scale, RatioScale) or isinstance(from_scale, IntervalScale)) and \
+                (isinstance(to_scale, RatioScale) or isinstance(to_scale, IntervalScale)):
+            can_convert = Unit.can_convert(from_scale.unit, to_scale.unit)
+            if not can_convert:
+                raise DimensionalException("A scale with dimensions {} cannot be converted to a scale with "
+                                           "dimensions {}."
+                                           .format(from_scale.dimensions, to_scale.dimensions))
+            factor = Unit.conversion_factor(from_scale.unit, to_scale.unit)
+            return factor
+        else:
+            raise ScaleConversionException("Cannot convert from {} to {} as they are not both cardinal scales."
+                                            .format(from_scale, to_scale))
+
+    @staticmethod
+    def conversion_off_set(from_scale, to_scale):
+        if (isinstance(from_scale, RatioScale) or isinstance(from_scale, IntervalScale)) and \
+                (isinstance(to_scale, RatioScale) or isinstance(to_scale, IntervalScale)):
+            from_ratio_scale = from_scale.base_ratio_scale()
+            to_ratio_scale = to_scale.base_ratio_scale()
+            from_ratio_factor = Unit.conversion_factor(from_scale.unit,from_ratio_scale[0].unit)
+            to_ratio_factor = Unit.conversion_factor(to_scale.unit,to_ratio_scale[0].unit)
+            if from_ratio_scale[0] == to_ratio_scale[0]:
+                off_set = (to_ratio_scale[1] * to_ratio_factor - from_ratio_scale[1]*from_ratio_factor) \
+                          / to_ratio_factor
+                return off_set
+            else:
+                raise ScaleConversionException("Cannot convert from {} to {} as they do not use the same base ratio "
+                                               "scale, i.e. they do not have the same known zero point."
+                                               .format(from_scale, to_scale))
+        else:
+            raise ScaleConversionException("Cannot convert from {} to {} as they are not both cardinal scales."
+                                            .format(from_scale, to_scale))
+
     def __init__(self, label=None, identifier=None, dimensions=Dimension(), system_of_units=None):
         super().__init__(label, identifier)
         self.fixedPoints = []
@@ -104,6 +140,9 @@ class RatioScale(Scale):
             system_of_units = unit.systemOfUnits
         super().__init__(label, identifier, dimensions=unit.dimensions, system_of_units=system_of_units)
         self.unit = unit
+
+    def base_ratio_scale(self):
+        return self, 0.0
 
     def __eq__(self, other):
         if isinstance(other, RatioScale):
@@ -138,6 +177,11 @@ class IntervalScale(Scale):
         self.unit = unit
         self.baseScale = base_scale
         self.offSet = off_set
+
+    def base_ratio_scale(self):
+        base_base = self.baseScale.base_ratio_scale()
+        conversion_fac = Unit.conversion_factor(base_base[0].unit, self.unit)
+        return base_base[0], base_base[1] * conversion_fac + self.offSet
 
     def __eq__(self, other):
         if isinstance(other, IntervalScale):

@@ -2,7 +2,8 @@ import unittest
 
 from omlib.constants import OM, SI, IMPERIAL
 from omlib.dimension import Dimension
-from omlib.measure import Measure
+from omlib.measure import Measure, Point
+from omlib.scale import Scale
 from omlib.unit import Unit, UnitMultiplication, UnitDivision
 
 
@@ -15,7 +16,7 @@ class TestUnits(unittest.TestCase):
         feet = Unit.get_singular_unit('feet', 'ft', base_unit=inch, factor=12, identifier=OM.NAMESPACE + 'feet')
         measure = Measure(1.75, m)
         measure.convert(feet)
-        self.assertAlmostEqual(float(5.74147), float(measure.numerical_value), delta=0.0001)
+        self.assertAlmostEqual(float(5.74147), float(measure.numericalValue), delta=0.0001)
         self.assertEqual(str(OM.NAMESPACE + 'feet'), str(measure.unit.identifier))
 
     def test_singular_unit_measure_conversion_by_creation(self):
@@ -25,7 +26,7 @@ class TestUnits(unittest.TestCase):
         feet = Unit.get_singular_unit('feet', 'ft', base_unit=inch, factor=12, identifier=OM.NAMESPACE + 'feet')
         measure = Measure(1.75, m)
         new_measure = Measure.create_by_converting(measure, feet)
-        self.assertAlmostEqual(float(5.74147), float(new_measure.numerical_value), delta=0.0001)
+        self.assertAlmostEqual(float(5.74147), float(new_measure.numericalValue), delta=0.0001)
         self.assertEqual(str(OM.NAMESPACE + 'feet'), str(new_measure.unit.identifier))
 
     def test_measure_conversion_1(self):
@@ -50,10 +51,10 @@ class TestUnits(unittest.TestCase):
         pa = Unit.get_singular_unit("Pascal", "Pa", base_unit=n_m2, identifier=OM.NAMESPACE + 'Pascal')
         psi = Unit.get_unit_division(lbf, inch2, symbol="psi", identifier=OM.NAMESPACE + 'psi')
         measure = Measure(12.2, psi)
-        self.assertAlmostEqual(12.2, measure.numerical_value, delta=0.1)
+        self.assertAlmostEqual(12.2, measure.numericalValue, delta=0.1)
         self.assertEqual(str(OM.NAMESPACE + 'psi'), str(measure.unit.identifier))
         measure.convert(pa)
-        self.assertAlmostEqual(84116, measure.numerical_value, delta=1)
+        self.assertAlmostEqual(84116, measure.numericalValue, delta=1)
         self.assertEqual(str(OM.NAMESPACE + 'Pascal'), str(measure.unit.identifier))
 
     def test_add_measures(self):
@@ -63,10 +64,10 @@ class TestUnits(unittest.TestCase):
         value_1 = Measure(2, m)
         value_2 = Measure(50, cm)
         result_value_1 = value_1 + value_2
-        self.assertAlmostEqual(2.5, result_value_1.numerical_value, delta=0.01)
+        self.assertAlmostEqual(2.5, result_value_1.numericalValue, delta=0.01)
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_1.unit.identifier))
         result_value_2 = value_2 + value_1
-        self.assertAlmostEqual(250, result_value_2.numerical_value, delta=0.01)
+        self.assertAlmostEqual(250, result_value_2.numericalValue, delta=0.01)
         self.assertEqual(str(OM.NAMESPACE + 'centimetre'), str(result_value_2.unit.identifier))
 
     def test_subtract_measures(self):
@@ -76,10 +77,10 @@ class TestUnits(unittest.TestCase):
         value_1 = Measure(2, m)
         value_2 = Measure(50, cm)
         result_value_1 = value_1 - value_2
-        self.assertAlmostEqual(1.5, result_value_1.numerical_value, delta=0.01)
+        self.assertAlmostEqual(1.5, result_value_1.numericalValue, delta=0.01)
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_1.unit.identifier))
         result_value_2 = value_2 - value_1
-        self.assertAlmostEqual(-150, result_value_2.numerical_value, delta=0.01)
+        self.assertAlmostEqual(-150, result_value_2.numericalValue, delta=0.01)
         self.assertEqual(str(OM.NAMESPACE + 'centimetre'), str(result_value_2.unit.identifier))
 
     def test_multiply_measures(self):
@@ -90,12 +91,12 @@ class TestUnits(unittest.TestCase):
         value_1 = Measure(2, m)
         value_2 = Measure(50, s)
         result_value_1 = value_1 * value_2
-        self.assertAlmostEqual(100, result_value_1.numerical_value, delta=0.01)
+        self.assertAlmostEqual(100, result_value_1.numericalValue, delta=0.01)
         self.assertTrue(isinstance(result_value_1.unit, UnitMultiplication))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_1.unit.multiplier.identifier))
         self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_1.unit.multiplicand.identifier))
         result_value_2 = value_2 * value_1
-        self.assertAlmostEqual(100, result_value_2.numerical_value, delta=0.01)
+        self.assertAlmostEqual(100, result_value_2.numericalValue, delta=0.01)
         self.assertTrue(isinstance(result_value_2.unit, UnitMultiplication))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_2.unit.multiplicand.identifier))
         self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_2.unit.multiplier.identifier))
@@ -110,12 +111,12 @@ class TestUnits(unittest.TestCase):
         value_1 = Measure(2, m)
         value_2 = Measure(50, s)
         result_value_1 = value_1 / value_2
-        self.assertAlmostEqual(0.04, result_value_1.numerical_value, delta=0.01)
+        self.assertAlmostEqual(0.04, result_value_1.numericalValue, delta=0.01)
         self.assertTrue(isinstance(result_value_1.unit, UnitDivision))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_1.unit.numerator.identifier))
         self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_1.unit.denominator.identifier))
         result_value_2 = value_2 / value_1
-        self.assertAlmostEqual(25, result_value_2.numerical_value, delta=0.01)
+        self.assertAlmostEqual(25, result_value_2.numericalValue, delta=0.01)
         self.assertTrue(isinstance(result_value_2.unit, UnitDivision))
         self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_2.unit.numerator.identifier))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_2.unit.denominator.identifier))
@@ -171,7 +172,7 @@ class TestUnits(unittest.TestCase):
         measure = Measure(2.4, hm_hour)
         measure.convert_to_base_units()
         self.assertEqual(m_s, measure.unit)
-        self.assertAlmostEqual(0.0667, measure.numerical_value, delta=0.0001)
+        self.assertAlmostEqual(0.0667, measure.numericalValue, delta=0.0001)
 
     def test_conversion_to_convenient_unit_1(self):
         m = SI.METRE
@@ -185,23 +186,23 @@ class TestUnits(unittest.TestCase):
         m1 = Measure(0.0043, m)
         m1.convert_to_convenient_units()
         self.assertEqual(mm, m1.unit)
-        self.assertAlmostEqual(4.3, m1.numerical_value, delta=0.001)
+        self.assertAlmostEqual(4.3, m1.numericalValue, delta=0.001)
         m2 = Measure(0.0000893, m)
         m2.convert_to_convenient_units()
         self.assertEqual(um, m2.unit)
-        self.assertAlmostEqual(89.3, m2.numerical_value, delta=0.001)
+        self.assertAlmostEqual(89.3, m2.numericalValue, delta=0.001)
         m5 = Measure(0.0002893, m)
         m5.convert_to_convenient_units()
         self.assertEqual(um, m5.unit)
-        self.assertAlmostEqual(289.3, m5.numerical_value, delta=0.001)
+        self.assertAlmostEqual(289.3, m5.numericalValue, delta=0.001)
         m3 = Measure(203324.2434, m)
         m3.convert_to_convenient_units()
         self.assertEqual(km, m3.unit)
-        self.assertAlmostEqual(203.3242434, m3.numerical_value, delta=0.00000001)
+        self.assertAlmostEqual(203.3242434, m3.numericalValue, delta=0.00000001)
         m4 = Measure(203324.2434, m)
         m4.convert_to_convenient_units(use_prefixes=False)
         self.assertEqual(m, m4.unit)
-        self.assertAlmostEqual(203324.2434, m4.numerical_value, delta=0.00001)
+        self.assertAlmostEqual(203324.2434, m4.numericalValue, delta=0.00001)
 
     def test_conversion_to_convenient_unit_2(self):
         s2 = Unit.get_unit_exponentiation(SI.SECOND, 2)
@@ -211,16 +212,16 @@ class TestUnits(unittest.TestCase):
         m1 = Measure(12.343, kg_m1_s2)
         m1.convert_to_convenient_units()
         self.assertEqual(kg_m1_s2, m1.unit)  # Pa not in correct system of units
-        self.assertAlmostEqual(12.343, m1.numerical_value, delta=0.00001)
+        self.assertAlmostEqual(12.343, m1.numericalValue, delta=0.00001)
         m2 = Measure(12.343, kg_m1_s2)
         m2.convert_to_convenient_units(system_of_units=SI.SYSTEM_OF_UNITS)
         self.assertEqual(kg_m1_s2, m2.unit)
-        self.assertAlmostEqual(12.343, m2.numerical_value, delta=0.00001)
+        self.assertAlmostEqual(12.343, m2.numericalValue, delta=0.00001)
         pa2 = Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2, system_of_units=SI.SYSTEM_OF_UNITS)
         m3 = Measure(12.343, kg_m1_s2)
         m3.convert_to_convenient_units()
         self.assertEqual(pa2, m3.unit)
-        self.assertAlmostEqual(12.343, m3.numerical_value, delta=0.00001)
+        self.assertAlmostEqual(12.343, m3.numericalValue, delta=0.00001)
         self.assertNotEqual(kg_m1_s2, m3.unit)
 
     def test_conversion_to_convenient_unit_3(self):
@@ -236,8 +237,68 @@ class TestUnits(unittest.TestCase):
         m2 = Measure(1, yd)
         m2.convert_to_convenient_units()
         self.assertEqual(yd, m2.unit)
-        self.assertAlmostEqual(1, m2.numerical_value, delta=0.00001)
+        self.assertAlmostEqual(1, m2.numericalValue, delta=0.00001)
         m1 = Measure(0.95, m)
         m1.convert_to_convenient_units(use_prefixes=False)
         self.assertEqual(m, m1.unit)
-        self.assertAlmostEqual(0.95, m1.numerical_value, delta=0.00001)
+        self.assertAlmostEqual(0.95, m1.numericalValue, delta=0.00001)
+
+    def test_conversion_between_scales_1(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        c_unit = Unit.get_singular_unit("degree Celsius", "°C", base_unit=SI.KELVIN, factor=1.0)
+        c = Scale.get_interval_scale(k, c_unit, -273.15, "Celsius scale")
+        f_unit = Unit.get_singular_unit("degree Fahrenheit", "°F", base_unit=SI.KELVIN, factor=1.0/1.8)
+        f = Scale.get_interval_scale(k, f_unit, -459.67, "Fahrenheit scale")
+        p1 = Point(32, f)
+        self.assertEqual(f, p1.scale)
+        self.assertEqual(f_unit, p1.scale.unit)
+        self.assertAlmostEqual(32.0, p1.numericalValue, delta=0.00001)
+        p1.convert(c)
+        self.assertEqual(c, p1.scale)
+        self.assertEqual(c_unit, p1.scale.unit)
+        self.assertAlmostEqual(0.0, p1.numericalValue, delta=0.00001)
+
+    def test_conversion_between_scales_2(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        c_unit = Unit.get_singular_unit("degree Celsius", "°C", base_unit=SI.KELVIN, factor=1.0)
+        c = Scale.get_interval_scale(k, c_unit, -273.15, "Celsius scale")
+        f_unit = Unit.get_singular_unit("degree Fahrenheit", "°F", base_unit=SI.KELVIN, factor=1.0/1.8)
+        f = Scale.get_interval_scale(k, f_unit, -459.67, "Fahrenheit scale")
+        p1 = Point(100, f)
+        self.assertEqual(f, p1.scale)
+        self.assertEqual(f_unit, p1.scale.unit)
+        self.assertAlmostEqual(100.0, p1.numericalValue, delta=0.00001)
+        p1.convert(c)
+        self.assertEqual(c, p1.scale)
+        self.assertEqual(c_unit, p1.scale.unit)
+        self.assertAlmostEqual(37.7777777778, p1.numericalValue, delta=0.00001)
+
+    def test_conversion_between_scales_3(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        c_unit = Unit.get_singular_unit("degree Celsius", "°C", base_unit=SI.KELVIN, factor=1.0)
+        c = Scale.get_interval_scale(k, c_unit, -273.15, "Celsius scale")
+        f_unit = Unit.get_singular_unit("degree Fahrenheit", "°F", base_unit=SI.KELVIN, factor=1.0/1.8)
+        f = Scale.get_interval_scale(k, f_unit, -459.67, "Fahrenheit scale")
+        p1 = Point(100, c)
+        self.assertEqual(c, p1.scale)
+        self.assertEqual(c_unit, p1.scale.unit)
+        self.assertAlmostEqual(100.0, p1.numericalValue, delta=0.00001)
+        p1.convert(f)
+        self.assertEqual(f, p1.scale)
+        self.assertEqual(f_unit, p1.scale.unit)
+        self.assertAlmostEqual(212, p1.numericalValue, delta=0.00001)
+
+    def test_conversion_between_scales_4(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        c_unit = Unit.get_singular_unit("degree Celsius", "°C", base_unit=SI.KELVIN, factor=1.0)
+        c = Scale.get_interval_scale(k, c_unit, -273.15, "Celsius scale")
+        f_unit = Unit.get_singular_unit("degree Fahrenheit", "°F", base_unit=SI.KELVIN, factor=1.0/1.8)
+        f = Scale.get_interval_scale(k, f_unit, -459.67, "Fahrenheit scale")
+        p1 = Point(67, c)
+        self.assertEqual(c, p1.scale)
+        self.assertEqual(c_unit, p1.scale.unit)
+        self.assertAlmostEqual(67.0, p1.numericalValue, delta=0.00001)
+        p1.convert(f)
+        self.assertEqual(f, p1.scale)
+        self.assertEqual(f_unit, p1.scale.unit)
+        self.assertAlmostEqual(152.6, p1.numericalValue, delta=0.00001)

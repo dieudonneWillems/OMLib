@@ -272,10 +272,15 @@ class Measure(Thing):
         if isinstance(other, float) or isinstance(other, int):
             new_measure = Measure(self.numericalValue * other, self.unit)
             return new_measure
-        if not isinstance(other, Measure):
-            raise ValueError('The multiplicand is not a measure, a float, or an int.')
+        if not isinstance(other, Measure) and not isinstance(other, Point):
+            raise ValueError('The multiplicand is not a measure, a point, a float, or an int.')
+        other_unit = None
+        if isinstance(other, Measure):
+            other_unit = other.unit
+        if isinstance(other, Point):
+            other_unit = other.scale.unit
         new_value = self.numericalValue * other.numericalValue
-        new_unit = Unit.get_unit_multiplication(self.unit, other.unit)
+        new_unit = Unit.get_unit_multiplication(self.unit, other_unit)
         new_measure = Measure(new_value, new_unit)
         return new_measure
 
@@ -283,9 +288,14 @@ class Measure(Thing):
         if isinstance(other, float) or isinstance(other, int):
             new_measure = Measure(self.numericalValue / other, self.unit)
             return new_measure
-        if not isinstance(other, Measure):
-            raise ValueError('The denominator is not a measure, a float, or an int.')
+        if not isinstance(other, Measure) and not isinstance(other, Point):
+            raise ValueError('The denominator is not a measure, a point, a float, or an int.')
+        other_unit = None
+        if isinstance(other, Measure):
+            other_unit = other.unit
+        if isinstance(other, Point):
+            other_unit = other.scale.unit
         new_value = self.numericalValue / other.numericalValue
-        new_unit = Unit.get_unit_division(self.unit, other.unit)
+        new_unit = Unit.get_unit_division(self.unit, other_unit)
         new_measure = Measure(new_value, new_unit)
         return new_measure

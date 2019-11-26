@@ -2,7 +2,7 @@ import unittest
 
 from omlib.constants import OM, SI, IMPERIAL
 from omlib.dimension import Dimension
-from omlib.measure import Measure, Point
+from omlib.measure import Measure, Point, om
 from omlib.scale import Scale
 from omlib.unit import Unit, UnitMultiplication, UnitDivision
 
@@ -375,3 +375,104 @@ class TestUnits(unittest.TestCase):
         p1 = Point(0.0, c)
         p2 = Point(32.0, f)
         self.assertAlmostEqual(0.0, (p1-p2).numericalValue, delta=0.00001)
+
+    def test_om(self):
+        m1 = om(13.2, SI.METRE)
+        self.assertTrue(isinstance(m1, Measure))
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m2 = om(321.33, k)
+        self.assertTrue(isinstance(m2, Point))
+
+    def test_addition_1(self):
+        m1 = om(13.5, SI.METRE)
+        m2 = om(32.1, SI.METRE)
+        m3 = m1 + m2
+        self.assertTrue(isinstance(m3, Measure))
+        self.assertAlmostEqual(45.6, m3.numericalValue, delta=0.000001)
+
+    def test_addition_2(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(13.5, k)
+        m2 = om(32.1, SI.KELVIN)
+        m3 = m1 + m2
+        self.assertTrue(isinstance(m3, Point))
+        self.assertAlmostEqual(45.6, m3.numericalValue, delta=0.000001)
+
+    def test_addition_3(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(13.5, k)
+        m2 = om(32.1, k)
+        self.assertRaises(ValueError, lambda: m1 + m2)
+
+    def test_addition_3(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(13.5, SI.KELVIN)
+        m2 = om(32.1, k)
+        self.assertRaises(ValueError, lambda: m1 + m2)
+
+    def test_subtraction_1(self):
+        m1 = om(43.5, SI.METRE)
+        m2 = om(32.1, SI.METRE)
+        m3 = m1 - m2
+        self.assertTrue(isinstance(m3, Measure))
+        self.assertAlmostEqual(11.4, m3.numericalValue, delta=0.000001)
+
+    def test_subtraction_2(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(43.5, k)
+        m2 = om(32.1, SI.KELVIN)
+        m3 = m1 - m2
+        self.assertTrue(isinstance(m3, Point))
+        self.assertAlmostEqual(11.4, m3.numericalValue, delta=0.000001)
+        self.assertTrue(k, m3.scale)
+
+    def test_subtraction_3(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(43.5, k)
+        m2 = om(32.1, k)
+        m3 = m1 - m2
+        self.assertTrue(isinstance(m3, Measure))
+        self.assertAlmostEqual(11.4, m3.numericalValue, delta=0.000001)
+        self.assertTrue(SI.KELVIN, m3.unit)
+
+    def test_subtraction_4(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(43.5, SI.KELVIN)
+        m2 = om(32.1, k)
+        self.assertRaises(ValueError, lambda: m1 - m2)
+
+    def test_multiplication_1(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(43.5, k)
+        m2 = om(3.2, SI.METRE)
+        m3 = m1 * m2
+        self.assertTrue(isinstance(m3, Measure))
+        self.assertAlmostEqual(139.2, m3.numericalValue, delta=0.000001)
+        self.assertEqual("K.m", str(m3.unit.symbol()))
+
+    def test_multiplication_2(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(43.5, SI.METRE)
+        m2 = om(3.2, k)
+        m3 = m1 * m2
+        self.assertTrue(isinstance(m3, Measure))
+        self.assertAlmostEqual(139.2, m3.numericalValue, delta=0.000001)
+        self.assertEqual("m.K", str(m3.unit.symbol()))
+
+    def test_division_1(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(43.5, k)
+        m2 = om(3.2, SI.METRE)
+        m3 = m1 / m2
+        self.assertTrue(isinstance(m3, Measure))
+        self.assertAlmostEqual(13.59375, m3.numericalValue, delta=0.00001)
+        self.assertEqual("K/m", str(m3.unit.symbol()))
+
+    def test_division_2(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        m1 = om(43.5, SI.METRE)
+        m2 = om(3.2, k)
+        m3 = m1 / m2
+        self.assertTrue(isinstance(m3, Measure))
+        self.assertAlmostEqual(13.59375, m3.numericalValue, delta=0.00001)
+        self.assertEqual("m/K", str(m3.unit.symbol()))

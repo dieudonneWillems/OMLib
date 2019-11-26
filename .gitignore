@@ -21,6 +21,9 @@ sdist/
 var/
 wheels/
 venv/
+omlib-venv/
+__pycache__/
+omlib/__pycache__/
 *.egg-info/
 .installed.cfg
 *.egg

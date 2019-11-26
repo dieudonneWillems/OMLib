@@ -114,15 +114,23 @@ class Point(Thing):
         return return_point
 
     def __sub__(self, other):
-        if not isinstance(other, Measure):
-            raise ValueError('The value to be subtracted is not a measure and only measures can be subtracted '
-                             'from a point.')
-        if not self.scale.dimensions == other.unit.dimensions:
-            raise DimensionalException("Measures and Points with units of different dimensions cannot be subtracted "
-                                       "from each other. {} != {}".format(self.scale.unit, other.unit))
-        new_measure = Measure.create_by_converting(other, self.scale.unit)
-        return_point = Measure(self.numericalValue - new_measure.numericalValue, self.scale)
-        return return_point
+        if not isinstance(other, Measure) and not isinstance(other, Point):
+            raise ValueError('The value to be subtracted is not a point or a measure and only measures or points '
+                             'can be subtracted from a point.')
+        if isinstance(other, Measure):
+            if not self.scale.dimensions == other.unit.dimensions:
+                raise DimensionalException("Measures and Points with units of different dimensions cannot be "
+                                           "subtracted from each other. {} != {}".format(self.scale.unit, other.unit))
+            new_measure = Measure.create_by_converting(other, self.scale.unit)
+            return_point = Point(self.numericalValue - new_measure.numericalValue, self.scale)
+            return return_point
+        if isinstance(other, Point):
+            if not self.scale.dimensions == other.scale.dimensions:
+                raise DimensionalException("Measures and Points with units of different dimensions cannot be "
+                                           "subtracted from each other. {} != {}".format(self.scale.unit, other.unit))
+            new_point = Point.create_by_converting(other, self.scale)
+            return_measure = Measure(self.numericalValue - new_point.numericalValue, self.scale.unit)
+            return return_measure
 
     def __mul__(self, other):
         as_measure = Measure(self.numericalValue, self.scale.unit)

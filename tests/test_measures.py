@@ -302,3 +302,36 @@ class TestUnits(unittest.TestCase):
         self.assertEqual(f, p1.scale)
         self.assertEqual(f_unit, p1.scale.unit)
         self.assertAlmostEqual(152.6, p1.numericalValue, delta=0.00001)
+
+    def test_point_comparison_1(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        p1 = Point(45.33, k)
+        p2 = Point(65.23, k)
+        self.assertFalse(p1 == p2)
+        self.assertTrue(p1 != p2)
+        self.assertTrue(p1 < p2)
+        self.assertTrue(p1 <= p2)
+        self.assertFalse(p1 > p2)
+        self.assertFalse(p1 >= p2)
+
+    def test_point_comparison_2(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        p1 = Point(145.33, k)
+        p2 = Point(65.23, k)
+        self.assertFalse(p1 == p2)
+        self.assertTrue(p1 != p2)
+        self.assertFalse(p1 < p2)
+        self.assertFalse(p1 <= p2)
+        self.assertTrue(p1 > p2)
+        self.assertTrue(p1 >= p2)
+
+    def test_point_comparison_3(self):
+        k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
+        p1 = Point(145.33, k)
+        p2 = Point(145.33, k)
+        self.assertTrue(p1 == p2)
+        self.assertFalse(p1 != p2)
+        self.assertFalse(p1 < p2)
+        self.assertTrue(p1 <= p2)
+        self.assertFalse(p1 > p2)
+        self.assertTrue(p1 >= p2)

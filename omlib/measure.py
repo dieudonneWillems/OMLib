@@ -7,6 +7,14 @@ from omlib.thing import Thing
 from omlib.unit import Unit, PrefixedUnit, SingularUnit
 
 
+def om(numerical_value, unit_or_scale, identifier=None):
+    if isinstance(unit_or_scale, Unit):
+        return Measure(numerical_value, unit_or_scale, identifier)
+    if isinstance(unit_or_scale, Scale):
+        return Point(numerical_value, unit_or_scale, identifier)
+    return None
+
+
 class Point(Thing):
 
     @staticmethod
@@ -52,7 +60,6 @@ class Point(Thing):
 
     def __new_value_for_comparisson(self, other):
         if isinstance(other, Point):
-            factor = Unit.conversion_factor(self.unit, other.unit)
             factor = Scale.conversion_factor(self.scale, other.scale)
             off_set = Scale.conversion_off_set(self.scale, other.scale)
             new_value = self.numericalValue * factor + off_set
@@ -62,37 +69,37 @@ class Point(Thing):
     def __eq__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value == other.numerical_value
+            return new_value == other.numericalValue
         return False
 
     def __ne__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value != other.numerical_value
+            return new_value != other.numericalValue
         return False
 
     def __lt__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value < other.numerical_value
+            return new_value < other.numericalValue
         return False
 
     def __le__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value <= other.numerical_value
+            return new_value <= other.numericalValue
         return False
 
     def __gt__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value > other.numerical_value
+            return new_value > other.numericalValue
         return False
 
     def __ge__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value >= other.numerical_value
+            return new_value >= other.numericalValue
         return False
 
     def __add__(self, other):

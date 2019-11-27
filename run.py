@@ -57,6 +57,16 @@ def unit_and_scale_conversion():
     m9.convert_to_convenient_units(system_of_units=IMPERIAL.SYSTEM_OF_UNITS)
     print("after conversion: m9 = {}".format(m9))
 
+    p1 = om(15.4, OM.CELSIUS_SCALE)
+    print("before conversion: p1 = {}".format(p1))
+    p1.convert(OM.KELVIN_SCALE)
+    print("after conversion: p1 = {}".format(p1))
+
+    p2 = om(101.4, OM.FAHRENHEIT_SCALE)
+    print("before conversion: p2 = {}".format(p2))
+    p2.convert(OM.CELSIUS_SCALE)
+    print("after conversion: p2 = {}".format(p2))
+
 
 if __name__ == '__main__':
     creating_measures_and_points()

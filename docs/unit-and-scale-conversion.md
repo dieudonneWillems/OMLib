@@ -150,5 +150,46 @@ after conversion: m9 = 3.2677165354330713 in
 
 ## How to convert points on a measurement scale to a different scale
 
+Points can be converted to a different measurement scale, if the original scale and target scale are related to each other. The best known examples are the temperature scales. The base scale is the Kelvin scale, which is a ratio scale with a non-arbitrary zero point. Other temperature scales are related to the Kelvin scale.
+
+Analogous to conversion of measures we have a class method and a static function to convert between scales, respectively `convert(self, to_scale)` and `create_by_converting(point, to_scale)`.
+
+To convert from a point on the Celsius scale to the Kelvin scale:
+
+```python
+p1 = om(15.4, OM.CELSIUS_SCALE)
+print("before conversion: p1 = {}".format(p1))
+p1.convert(OM.KELVIN_SCALE)
+print("after conversion: p1 = {}".format(p1))
+```
+
+```
+before conversion: p1 = 15.4 °C
+after conversion: p1 = 288.54999999999995 K
+```
+
+If another interval scale is based on the same ratio scale, you can also convert between those scales:
+
+```python
+p2 = om(101.4, OM.FAHRENHEIT_SCALE)
+print("before conversion: p2 = {}".format(p2))
+p2.convert(OM.CELSIUS_SCALE)
+print("after conversion: p2 = {}".format(p2))
+```
+
+```
+before conversion: p2 = 101.4 °F
+after conversion: p2 = 38.55555555555559 °C
+```
+
+**NB. You can also convert measures with Celsius units to Fahrenheit units. But this has a different meaning that conversion between scales. You can only convert temperature differences with measures (where 15 K = 15 °C), not temperature scales (where 15 K = -258.15 °C). Most of the time, you will need to use points on temperature scales!** 
+
 ## How conversion works
 
+### Measurement scales
+
+Two types of scales are relevant for conversion, Ratio scales and Interval scales. A ratio scale is a measurement scale with a fixed and **non-arbitrary** zero point and ratios of differences can be expressed. For instance, the Kelvin temperature scale is a ratio scale as it defines a non-arbitrary zero point (absolute zero, i.e. 0 K). By using a fixed unit to express differences (the difference between 15 K and 25 K is 10 K and is the same as the difference between 1033 K and 1043 K) you can say that 400 K is twice as hot as 200 K. You can, therefore, express ratios. 
+
+An Interval scale only allows for the expression of ratios of differences. So you can say that the difference between 10 °C and 20 °C is twice as large as the difference between 42 °C and 47 °C, but not that 150 °C is twice as hot as 75°C, which would be meaningless as you have no zero point defined.
+
+Interval scales, however can be related to ratio scales, if a non-arbitrary zero-point can be defined, allowing for conversion between interval and ratio scales. To allow for this conversion, an off-set needs to be defined for the interval scale. This off-set is the numerical value of the the zero-point in the interval scale. For the Celsius scale, this would be -273.15 °C, with respect to the Kelvin ratio scale.

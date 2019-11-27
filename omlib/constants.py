@@ -11,7 +11,7 @@ class OM_IDS:
 
 
 class SI:
-    SYSTEM_OF_UNITS = "SI" # WARNING If you change "SI" also change in constants.py
+    SYSTEM_OF_UNITS = "SI"  # WARNING If you change "SI" also change in constants.py
 
     # SI Prefixes
     YOTTA = Prefix('yotta', 'Y', 1e24, OM_IDS.NAMESPACE + 'yotta')
@@ -58,16 +58,6 @@ class SI:
                                      identifier=OM_IDS.NAMESPACE + 'candela', system_of_units=SYSTEM_OF_UNITS,
                                      is_base_unit=True)
 
-class OM:
-    NAMESPACE = OM_IDS.NAMESPACE
-    LENGTH_DIMENSION = OM_IDS.LENGTH_DIMENSION
-
-    DEGREE_CELSIUS = Unit.get_singular_unit("degree Celsius", "°C", base_unit=SI.KELVIN, factor=1.0)
-    DEGREE_FAHRENHEIT = Unit.get_singular_unit("degree Fahrenheit", "°F", base_unit=SI.KELVIN, factor=1.0/1.8)
-
-    KELVIN_SCALE = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
-    CELSIUS_SCALE = Scale.get_interval_scale(KELVIN_SCALE, DEGREE_CELSIUS, -273.15, "Celsius scale")
-    FAHRENHEIT_SCALE = Scale.get_interval_scale(KELVIN_SCALE, DEGREE_FAHRENHEIT, -459.67, "Fahrenheit scale")
 
 class IEC:
     KIBI = Prefix('kibi', 'Ki', pow(2, 10), OM_IDS.NAMESPACE + 'kibi')
@@ -92,8 +82,36 @@ class IMPERIAL:
     # Imperial Base uits
     YARD = Unit.get_singular_unit('yard', 'yd', base_unit=SI.METRE, factor=0.9144, identifier=OM_IDS.NAMESPACE + 'yard',
                                   system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
+    FOOT = Unit.get_singular_unit('foot', 'ft', base_unit=YARD, factor=1/3, identifier=OM_IDS.NAMESPACE + 'foot')
+    INCH = Unit.get_singular_unit('inch', 'in', base_unit=YARD, factor=1/36, identifier=OM_IDS.NAMESPACE + 'inch')
+
     POUND = Unit.get_singular_unit('pound', 'lb', base_unit=SI.KILOGRAM, factor=0.45359237,
                                    identifier=OM_IDS.NAMESPACE + 'pound', system_of_units=SYSTEM_OF_UNITS,
                                    is_base_unit=True)
 
+class OM:
+    NAMESPACE = OM_IDS.NAMESPACE
+    LENGTH_DIMENSION = OM_IDS.LENGTH_DIMENSION
+
+    CENTIMETRE = Unit.get_prefixed_unit(SI.CENTI, base_unit=SI.METRE, identifier=OM_IDS.NAMESPACE + 'centimetre')
+    KILOMETRE = Unit.get_prefixed_unit(SI.KILO, base_unit=SI.METRE, identifier=OM_IDS.NAMESPACE + 'kilometre')
+
+    MINUTE_TIME = Unit.get_singular_unit("minute", "m", base_unit=SI.SECOND, factor=60,
+                                         identifier=OM_IDS.NAMESPACE + 'minute')
+    HOUR_TIME = Unit.get_singular_unit("hour", "h", base_unit=MINUTE_TIME, factor=60,
+                                       identifier=OM_IDS.NAMESPACE + 'hour')
+
+    DEGREE_CELSIUS = Unit.get_singular_unit("degree Celsius", "°C", base_unit=SI.KELVIN, factor=1.0)
+    DEGREE_FAHRENHEIT = Unit.get_singular_unit("degree Fahrenheit", "°F", base_unit=SI.KELVIN, factor=1.0 / 1.8)
+
+    KELVIN_SCALE = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", identifier=OM_IDS.NAMESPACE + 'KelvinScale')
+    CELSIUS_SCALE = Scale.get_interval_scale(KELVIN_SCALE, DEGREE_CELSIUS, -273.15, "Celsius scale",
+                                             identifier=OM_IDS.NAMESPACE + 'CelsiusScale')
+    FAHRENHEIT_SCALE = Scale.get_interval_scale(KELVIN_SCALE, DEGREE_FAHRENHEIT, -459.67, "Fahrenheit scale",
+                                                identifier=OM_IDS.NAMESPACE + 'FahrenheitScale')
+
+    METRE_PER_SECOND = Unit.get_unit_division(SI.METRE, SI.SECOND, "m/s",
+                                              identifier=OM_IDS.NAMESPACE + 'metrePerSecond')
+    KILOMETRE_PER_HOUR = Unit.get_unit_division(KILOMETRE, HOUR_TIME, "km/h",
+                                                identifier=OM_IDS.NAMESPACE + 'kilometrePerHour')
 

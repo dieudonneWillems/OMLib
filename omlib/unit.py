@@ -472,6 +472,8 @@ class SingularUnit(Unit):
                  system_of_units=None, is_base_unit=False):
         if base_unit is not None:
             dimensions = base_unit.dimensions
+        if system_of_units is None and not is_base_unit and base_unit is not None:
+            system_of_units = base_unit.systemOfUnits
         super().__init__(label, symbol, dimensions, identifier, system_of_units=system_of_units,
                          is_base_unit=is_base_unit)
         self.factor = factor

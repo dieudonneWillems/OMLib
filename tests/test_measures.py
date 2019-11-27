@@ -12,29 +12,27 @@ class TestUnits(unittest.TestCase):
     def test_singular_unit_measure_conversion(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
-        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
-        feet = Unit.get_singular_unit('feet', 'ft', base_unit=inch, factor=12, identifier=OM.NAMESPACE + 'feet')
+        feet = IMPERIAL.FOOT
         measure = Measure(1.75, m)
         measure.convert(feet)
         self.assertAlmostEqual(float(5.74147), float(measure.numericalValue), delta=0.0001)
-        self.assertEqual(str(OM.NAMESPACE + 'feet'), str(measure.unit.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'foot'), str(measure.unit.identifier))
 
     def test_singular_unit_measure_conversion_by_creation(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
-        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
-        feet = Unit.get_singular_unit('feet', 'ft', base_unit=inch, factor=12, identifier=OM.NAMESPACE + 'feet')
+        feet = IMPERIAL.FOOT
         measure = Measure(1.75, m)
         new_measure = Measure.create_by_converting(measure, feet)
         self.assertAlmostEqual(float(5.74147), float(new_measure.numericalValue), delta=0.0001)
-        self.assertEqual(str(OM.NAMESPACE + 'feet'), str(new_measure.unit.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'foot'), str(new_measure.unit.identifier))
 
     def test_measure_conversion_1(self):
         l_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
         m_dim = Dimension(0, 0, 1, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', l_dim, identifier=OM.NAMESPACE + 'metre')
-        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+        inch = IMPERIAL.INCH
         inch2 = Unit.get_unit_exponentiation(inch, 2)
         s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
         g = Unit.get_singular_unit('gram', 'g', m_dim, identifier=OM.NAMESPACE + 'gram')
@@ -174,6 +172,12 @@ class TestUnits(unittest.TestCase):
         self.assertEqual(m_s, measure.unit)
         self.assertAlmostEqual(0.0667, measure.numericalValue, delta=0.0001)
 
+    def test_conversion_to_base_units2(self):
+        m4 = om(4.34, IMPERIAL.FOOT)
+        m4.convert_to_base_units()
+        self.assertEqual(IMPERIAL.YARD, m4.unit)
+        self.assertAlmostEqual(1.44666667, m4.numericalValue, delta=0.0001)
+
     def test_conversion_to_convenient_unit_1(self):
         m = SI.METRE
         um = Unit.get_prefixed_unit(SI.MICRO, m)
@@ -208,14 +212,14 @@ class TestUnits(unittest.TestCase):
         s2 = Unit.get_unit_exponentiation(SI.SECOND, 2)
         m1_s2 = Unit.get_unit_multiplication(SI.METRE, s2)
         kg_m1_s2 = Unit.get_unit_division(SI.KILOGRAM, m1_s2)
-        Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2)
+        pa = Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2)
         m1 = Measure(12.343, kg_m1_s2)
         m1.convert_to_convenient_units()
-        self.assertEqual(kg_m1_s2, m1.unit)  # Pa not in correct system of units
+        self.assertEqual(pa, m1.unit)
         self.assertAlmostEqual(12.343, m1.numericalValue, delta=0.00001)
         m2 = Measure(12.343, kg_m1_s2)
         m2.convert_to_convenient_units(system_of_units=SI.SYSTEM_OF_UNITS)
-        self.assertEqual(kg_m1_s2, m2.unit)
+        self.assertEqual(pa, m2.unit)
         self.assertAlmostEqual(12.343, m2.numericalValue, delta=0.00001)
         pa2 = Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2, system_of_units=SI.SYSTEM_OF_UNITS)
         m3 = Measure(12.343, kg_m1_s2)

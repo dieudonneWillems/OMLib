@@ -154,11 +154,19 @@ class Measure(Thing):
         return new_measure
 
     @staticmethod
-    def create_by_converting_to_base_unit(measure, in_system_of_units=SI):
+    def create_by_converting_to_base_units(measure, in_system_of_units=SI):
         if not isinstance(measure, Measure):
             raise ValueError("The parameter to the convert method is not of the correct type (Measure).")
         new_measure = Measure(measure.numericalValue, measure.unit)
         new_measure.convert_to_base_units(in_system_of_units)
+        return new_measure
+
+    @staticmethod
+    def create_by_converting_to_convenient_units(measure, in_system_of_units=None, use_prefixes=True):
+        if not isinstance(measure, Measure):
+            raise ValueError("The parameter to the convert method is not of the correct type (Measure).")
+        new_measure = Measure(measure.numericalValue, measure.unit)
+        new_measure.convert_to_convenient_units(in_system_of_units, use_prefixes=use_prefixes)
         return new_measure
 
     def __init__(self, numerical_value, unit, identifier=None):
@@ -173,7 +181,11 @@ class Measure(Thing):
         self.numericalValue = self.numericalValue * factor
         self.unit = to_unit
 
-    def convert_to_base_units(self, in_system_of_units=SI.SYSTEM_OF_UNITS):
+    def convert_to_base_units(self, in_system_of_units=None):
+        if in_system_of_units is None:
+            in_system_of_units = self.unit.systemOfUnits
+        if in_system_of_units is None:
+            in_system_of_units = SI.SYSTEM_OF_UNITS
         base = Unit.get_base_units(self.unit, in_system_of_units)
         self.convert(base)
 

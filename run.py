@@ -1,6 +1,10 @@
 
 from omlib.constants import OM, SI, IMPERIAL
+from omlib.dimension import Dimension
 from omlib.measure import om, Point, Measure
+from omlib.scale import Scale
+from omlib.unit import Unit
+
 
 def creating_measures_and_points():
     m1 = om(12.0, SI.METRE)
@@ -67,8 +71,22 @@ def unit_and_scale_conversion():
     p2.convert(OM.CELSIUS_SCALE)
     print("after conversion: p2 = {}".format(p2))
 
+def conversion_exceptions():
+    # m1 = om(14.2, OM.METRE_PER_SECOND)
+    # m1.convert(OM.HOUR_TIME)
+    # my_unit = Unit.get_singular_unit("my unit", "mu", Dimension(T=-1, L=1))
+    # m2 = om(311.43, my_unit)
+    # m2.convert(OM.METRE_PER_SECOND)
+    # m3 = om(66.32, SI.KELVIN)
+    # m3.convert(OM.KELVIN_SCALE)
+    # my_scale = Scale.get_ratio_scale(OM.DEGREE_FAHRENHEIT, "my scale")
+    # p1 = om(354.23, OM.KELVIN_SCALE)
+    # p1.convert(my_scale)
+    pass
+
 
 if __name__ == '__main__':
     creating_measures_and_points()
     unit_and_scale_conversion()
+    conversion_exceptions()
 

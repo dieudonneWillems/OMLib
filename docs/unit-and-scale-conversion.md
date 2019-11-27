@@ -94,7 +94,7 @@ Which unit the measure is converted to is determined by the absolute log value o
 * The log value is appended with 2.0 if the log value is smaller than 1 (i.e the value is between 0 and 1.0)
 * The log value is appended with 1.0 if the unit to be converted into is not a singular unit.
 
-These adjustments mean that numerical values larger than 1.0 have preference above values just below 1.0. So, for instance, the preferred conversion unit for 0.098 m is cm (i.e. 9.8 cm) instead of dm (i.e. 0.98 dm). And singular units have a preference over other units such as prefixed units or unit divisions. For example, the convenient unit for $1 kg/m^{-1} s^2$ is Pa (Pascal), the result being $1 Pa$. 
+These adjustments mean that numerical values larger than 1.0 have preference above values just below 1.0. So, for instance, the preferred conversion unit for 0.098 m is cm (i.e. 9.8 cm) instead of dm (i.e. 0.98 dm). And singular units have a preference over other units such as prefixed units or unit divisions. For example, the convenient unit for 1 kg/(m.s2​) is Pa (Pascal), the result being ​1 Pa​. 
 
 #### Methods and functions:
 

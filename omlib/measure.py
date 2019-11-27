@@ -207,6 +207,8 @@ class Measure(Thing):
 
     @staticmethod
     def __get_log_value(value, unit):
+        if value == 0.0:
+            return 0
         log_value = abs(math.log10(value))
         if value < 1:
             log_value = log_value + 2

@@ -42,6 +42,21 @@ def unit_and_scale_conversion():
     m6.convert_to_base_units()
     print("after conversion: m6 = {}".format(m6))
 
+    m7 = om(1200, SI.SECOND)
+    print("before conversion: m7 = {}".format(m7))
+    m7.convert_to_convenient_units(use_prefixes=False)
+    print("after conversion: m7 = {}".format(m7))
+
+    m8 = om(1200, SI.SECOND)
+    print("before conversion: m8 = {}".format(m8))
+    m8.convert_to_convenient_units()
+    print("after conversion: m8 = {}".format(m8))
+
+    m9 = om(0.083, SI.METRE)
+    print("before conversion: m9 = {}".format(m9))
+    m9.convert_to_convenient_units(system_of_units=IMPERIAL.SYSTEM_OF_UNITS)
+    print("after conversion: m9 = {}".format(m9))
+
 
 if __name__ == '__main__':
     creating_measures_and_points()

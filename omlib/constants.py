@@ -100,6 +100,7 @@ class OM:
                                          identifier=OM_IDS.NAMESPACE + 'minute')
     HOUR_TIME = Unit.get_singular_unit("hour", "h", base_unit=MINUTE_TIME, factor=60,
                                        identifier=OM_IDS.NAMESPACE + 'hour')
+    KILOSECOND = Unit.get_prefixed_unit(SI.KILO, base_unit=SI.SECOND, identifier=OM_IDS.NAMESPACE + 'kilosecond')
 
     DEGREE_CELSIUS = Unit.get_singular_unit("degree Celsius", "°C", base_unit=SI.KELVIN, factor=1.0)
     DEGREE_FAHRENHEIT = Unit.get_singular_unit("degree Fahrenheit", "°F", base_unit=SI.KELVIN, factor=1.0 / 1.8)

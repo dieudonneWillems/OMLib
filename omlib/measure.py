@@ -7,6 +7,14 @@ from omlib.thing import Thing
 from omlib.unit import Unit, PrefixedUnit, SingularUnit
 
 
+def om(numerical_value, unit_or_scale, identifier=None):
+    if isinstance(unit_or_scale, Unit):
+        return Measure(numerical_value, unit_or_scale, identifier)
+    if isinstance(unit_or_scale, Scale):
+        return Point(numerical_value, unit_or_scale, identifier)
+    return None
+
+
 class Point(Thing):
 
     @staticmethod
@@ -52,7 +60,6 @@ class Point(Thing):
 
     def __new_value_for_comparisson(self, other):
         if isinstance(other, Point):
-            factor = Unit.conversion_factor(self.unit, other.unit)
             factor = Scale.conversion_factor(self.scale, other.scale)
             off_set = Scale.conversion_off_set(self.scale, other.scale)
             new_value = self.numericalValue * factor + off_set
@@ -62,37 +69,37 @@ class Point(Thing):
     def __eq__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value == other.numerical_value
+            return new_value == other.numericalValue
         return False
 
     def __ne__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value != other.numerical_value
+            return new_value != other.numericalValue
         return False
 
     def __lt__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value < other.numerical_value
+            return new_value < other.numericalValue
         return False
 
     def __le__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value <= other.numerical_value
+            return new_value <= other.numericalValue
         return False
 
     def __gt__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value > other.numerical_value
+            return new_value > other.numericalValue
         return False
 
     def __ge__(self, other):
         new_value = self.__new_value_for_comparisson(other)
         if new_value is not None:
-            return new_value >= other.numerical_value
+            return new_value >= other.numericalValue
         return False
 
     def __add__(self, other):
@@ -107,15 +114,23 @@ class Point(Thing):
         return return_point
 
     def __sub__(self, other):
-        if not isinstance(other, Measure):
-            raise ValueError('The value to be subtracted is not a measure and only measures can be subtracted '
-                             'from a point.')
-        if not self.scale.dimensions == other.unit.dimensions:
-            raise DimensionalException("Measures and Points with units of different dimensions cannot be subtracted "
-                                       "from each other. {} != {}".format(self.scale.unit, other.unit))
-        new_measure = Measure.create_by_converting(other, self.scale.unit)
-        return_point = Measure(self.numericalValue - new_measure.numericalValue, self.scale)
-        return return_point
+        if not isinstance(other, Measure) and not isinstance(other, Point):
+            raise ValueError('The value to be subtracted is not a point or a measure and only measures or points '
+                             'can be subtracted from a point.')
+        if isinstance(other, Measure):
+            if not self.scale.dimensions == other.unit.dimensions:
+                raise DimensionalException("Measures and Points with units of different dimensions cannot be "
+                                           "subtracted from each other. {} != {}".format(self.scale.unit, other.unit))
+            new_measure = Measure.create_by_converting(other, self.scale.unit)
+            return_point = Point(self.numericalValue - new_measure.numericalValue, self.scale)
+            return return_point
+        if isinstance(other, Point):
+            if not self.scale.dimensions == other.scale.dimensions:
+                raise DimensionalException("Measures and Points with units of different dimensions cannot be "
+                                           "subtracted from each other. {} != {}".format(self.scale.unit, other.unit))
+            new_point = Point.create_by_converting(other, self.scale)
+            return_measure = Measure(self.numericalValue - new_point.numericalValue, self.scale.unit)
+            return return_measure
 
     def __mul__(self, other):
         as_measure = Measure(self.numericalValue, self.scale.unit)
@@ -257,10 +272,15 @@ class Measure(Thing):
         if isinstance(other, float) or isinstance(other, int):
             new_measure = Measure(self.numericalValue * other, self.unit)
             return new_measure
-        if not isinstance(other, Measure):
-            raise ValueError('The multiplicand is not a measure, a float, or an int.')
+        if not isinstance(other, Measure) and not isinstance(other, Point):
+            raise ValueError('The multiplicand is not a measure, a point, a float, or an int.')
+        other_unit = None
+        if isinstance(other, Measure):
+            other_unit = other.unit
+        if isinstance(other, Point):
+            other_unit = other.scale.unit
         new_value = self.numericalValue * other.numericalValue
-        new_unit = Unit.get_unit_multiplication(self.unit, other.unit)
+        new_unit = Unit.get_unit_multiplication(self.unit, other_unit)
         new_measure = Measure(new_value, new_unit)
         return new_measure
 
@@ -268,9 +288,14 @@ class Measure(Thing):
         if isinstance(other, float) or isinstance(other, int):
             new_measure = Measure(self.numericalValue / other, self.unit)
             return new_measure
-        if not isinstance(other, Measure):
-            raise ValueError('The denominator is not a measure, a float, or an int.')
+        if not isinstance(other, Measure) and not isinstance(other, Point):
+            raise ValueError('The denominator is not a measure, a point, a float, or an int.')
+        other_unit = None
+        if isinstance(other, Measure):
+            other_unit = other.unit
+        if isinstance(other, Point):
+            other_unit = other.scale.unit
         new_value = self.numericalValue / other.numericalValue
-        new_unit = Unit.get_unit_division(self.unit, other.unit)
+        new_unit = Unit.get_unit_division(self.unit, other_unit)
         new_measure = Measure(new_value, new_unit)
         return new_measure

@@ -531,8 +531,14 @@ class PrefixedUnit(Unit):
     def get_base_units_exponents(self):
         base_base = self.baseUnit.get_base_units_exponents()
         result = []
+        factor_added = False
         for exponents in base_base:
-            converted = [exponents[0], exponents[1], exponents[2] * self.prefix.factor]
+            if not factor_added:
+                corrected_factor = pow(self.prefix.factor, 1/(exponents[1]))
+                converted = [exponents[0], exponents[1], exponents[2] * corrected_factor]
+                factor_added = True
+            else:
+                converted = exponents
             result.append(converted)
         return result
 

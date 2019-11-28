@@ -300,6 +300,17 @@ This will also happen when the parameter provided to the convert method is, for 
 
 ### Units
 
+When converting a measure from one unit to another, we essentially calculate the conversion factor between the two units and multiply the numerical value of the measure with this factor. For example, the conversion factor for converting metres to inches will be 39.3700787 (1 m equals 39.37 in), while the conversion factor for converting inches to metres will be 0.0254 (1 in equals 0.0254 m or 2.54 cm).
+
+To calculate the conversion factor we:
+
+* First need to determine whether the units can be converted to each other. This is first done by comparing the dimensions of both units. Only units that have the same dimensions can be converted to each other. If the dimensions are not equal, a `DimensionalException` is raised (see above in the section Exceptions).
+* Then we determine for both units the conversion factor from that unit to its most basic ancestor. Most units will have a base unit with relation to which the unit is defined. For instance, prefixed units like kilometre, nanogram, or millisecond will have a base unit that is respectively, metre, gram, and second. Other singular units like inch may also have a base unit such as the yard, which is again defined using its base unit of metre.  Some singular units will not have a base unit and they are considered the most basic ancestor of the units defined in relation to that singular unit. To determine the most basic ancestor:
+  * we recursively calculate the factor of each singular or prefixed unit until we reach a singular unit without a base unit. For instance, the conversion factor from inch to yard is 1/36 and the conversion factor from yard to metre is 0.9144. The conversion factor from inch to metre is, therefore, 1/36 x 0.9144 = 0.0254.
+  * if we encounter a compound unit such as a unit division, the most basic ancestor for each of its constituent units (the numerator unit and the denominator unit for division) is calculated and a new compound unit is created (if it not already exists) with its constituent units being the most basic ancestor of its parts.
+  * when we have the most basic ancestors for the source and target unit we calculate the conversion factor from source to target unit by dividing the two conversion factors. For instance, if we want to determine the conversion factor for conversion from inch to cm, we find a conversion factor for inch to metre of 0.0254 and a conversion factor for cm to metre of 0.01. The conversion factor from inch to cm is, therefore, 0.0254 / 0.01 = 2.54.
+  * if the two units do not have the same most basic ancestor, a `UnitConversionException` is raised. The units can not be converted between each other.
+
 
 
 ### Measurement scales

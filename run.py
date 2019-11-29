@@ -21,6 +21,7 @@ def creating_measures_and_points():
     print(m4)
     print(type(m4))
 
+
 def unit_and_scale_conversion():
     m1 = om(175, OM.CENTIMETRE)
     print("before conversion: m1 = {}".format(m1))
@@ -71,6 +72,19 @@ def unit_and_scale_conversion():
     p2.convert(OM.CELSIUS_SCALE)
     print("after conversion: p2 = {}".format(p2))
 
+
+def create_units():
+    portion = Unit.get_unit_multiple(SI.GRAM, 32.0, label="portion", symbol="portion")
+    p32g = Unit.get_unit_division(OM.ONE, portion)
+    kcal_p32g = Unit.get_unit_multiplication(OM.KILOCALORIE, p32g)
+    m1 = om(2, portion)
+    print("number of portions: m1 = {}".format(m1))
+    m2 = om(34, kcal_p32g)
+    print("Energy content per portion: m2 = {}".format(m2))
+    m3 = m1 * m2
+    print("Energy: m1 * m2 = {}".format(m3))
+
+
 def conversion_exceptions():
     # m1 = om(14.2, OM.METRE_PER_SECOND)
     # m1.convert(OM.HOUR_TIME)
@@ -89,4 +103,5 @@ if __name__ == '__main__':
     creating_measures_and_points()
     unit_and_scale_conversion()
     conversion_exceptions()
+    create_units()
 

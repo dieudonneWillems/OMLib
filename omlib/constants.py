@@ -89,9 +89,12 @@ class IMPERIAL:
                                    identifier=OM_IDS.NAMESPACE + 'pound', system_of_units=SYSTEM_OF_UNITS,
                                    is_base_unit=True)
 
+
 class OM:
     NAMESPACE = OM_IDS.NAMESPACE
     LENGTH_DIMENSION = OM_IDS.LENGTH_DIMENSION
+
+    ONE = Unit.get_singular_unit("one", "", dimensions=Dimension(), identifier=OM_IDS.NAMESPACE + 'one')
 
     CENTIMETRE = Unit.get_prefixed_unit(SI.CENTI, base_unit=SI.METRE, identifier=OM_IDS.NAMESPACE + 'centimetre')
     KILOMETRE = Unit.get_prefixed_unit(SI.KILO, base_unit=SI.METRE, identifier=OM_IDS.NAMESPACE + 'kilometre')
@@ -115,4 +118,15 @@ class OM:
                                               identifier=OM_IDS.NAMESPACE + 'metrePerSecond')
     KILOMETRE_PER_HOUR = Unit.get_unit_division(KILOMETRE, HOUR_TIME, "km/h",
                                                 identifier=OM_IDS.NAMESPACE + 'kilometrePerHour')
+    METRE_PER_SECOND_SQUARED = Unit.get_unit_division(SI.METRE, Unit.get_unit_exponentiation(SI.SECOND, 2), "m/s2",
+                                              identifier=OM_IDS.NAMESPACE + 'metrePerSecondSquared')
 
+    KILOGRAM_METRE_PER_SECOND_SQUARED = Unit.get_unit_multiplication(SI.KILOGRAM, METRE_PER_SECOND_SQUARED,
+                                                                     identifier=OM_IDS.NAMESPACE + 'kilogramMetrePerSecond')
+    NEWTON = Unit.get_singular_unit('newton', 'N', base_unit=KILOGRAM_METRE_PER_SECOND_SQUARED,
+                                    identifier=OM_IDS.NAMESPACE + 'newton')
+    JOULE = Unit.get_singular_unit('joule', 'J', base_unit=Unit.get_unit_multiplication(NEWTON, SI.METRE),
+                                   identifier=OM_IDS.NAMESPACE + 'joule')
+    CALORIE = Unit.get_singular_unit('calorie', 'cal', base_unit=JOULE, factor=4.184,
+                                     identifier=OM_IDS.NAMESPACE + 'calorie')
+    KILOCALORIE = Unit.get_prefixed_unit(SI.KILO, CALORIE, identifier=OM_IDS.NAMESPACE + 'kilocalorie')

@@ -82,8 +82,8 @@ class IMPERIAL:
     # Imperial Base uits
     YARD = Unit.get_singular_unit('yard', 'yd', base_unit=SI.METRE, factor=0.9144, identifier=OM_IDS.NAMESPACE + 'yard',
                                   system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
-    FOOT = Unit.get_singular_unit('foot', 'ft', base_unit=YARD, factor=1/3, identifier=OM_IDS.NAMESPACE + 'foot')
-    INCH = Unit.get_singular_unit('inch', 'in', base_unit=YARD, factor=1/36, identifier=OM_IDS.NAMESPACE + 'inch')
+    FOOT = Unit.get_singular_unit('foot', 'ft', base_unit=YARD, factor=1 / 3, identifier=OM_IDS.NAMESPACE + 'foot')
+    INCH = Unit.get_singular_unit('inch', 'in', base_unit=YARD, factor=1 / 36, identifier=OM_IDS.NAMESPACE + 'inch')
 
     POUND = Unit.get_singular_unit('pound', 'lb', base_unit=SI.KILOGRAM, factor=0.45359237,
                                    identifier=OM_IDS.NAMESPACE + 'pound', system_of_units=SYSTEM_OF_UNITS,
@@ -114,12 +114,10 @@ class OM:
     FAHRENHEIT_SCALE = Scale.get_interval_scale(KELVIN_SCALE, DEGREE_FAHRENHEIT, -459.67, "Fahrenheit scale",
                                                 identifier=OM_IDS.NAMESPACE + 'FahrenheitScale')
 
-    METRE_PER_SECOND = Unit.get_unit_division(SI.METRE, SI.SECOND, "m/s",
-                                              identifier=OM_IDS.NAMESPACE + 'metrePerSecond')
-    KILOMETRE_PER_HOUR = Unit.get_unit_division(KILOMETRE, HOUR_TIME, "km/h",
-                                                identifier=OM_IDS.NAMESPACE + 'kilometrePerHour')
-    METRE_PER_SECOND_SQUARED = Unit.get_unit_division(SI.METRE, Unit.get_unit_exponentiation(SI.SECOND, 2), "m/s2",
-                                              identifier=OM_IDS.NAMESPACE + 'metrePerSecondSquared')
+    METRE_PER_SECOND = Unit.get_unit_division(SI.METRE, SI.SECOND, identifier=OM_IDS.NAMESPACE + 'metrePerSecond')
+    KILOMETRE_PER_HOUR = Unit.get_unit_division(KILOMETRE, HOUR_TIME, identifier=OM_IDS.NAMESPACE + 'kilometrePerHour')
+    METRE_PER_SECOND_SQUARED = Unit.get_unit_division(SI.METRE, Unit.get_unit_exponentiation(SI.SECOND, 2),
+                                                      identifier=OM_IDS.NAMESPACE + 'metrePerSecondSquared')
 
     KILOGRAM_METRE_PER_SECOND_SQUARED = Unit.get_unit_multiplication(SI.KILOGRAM, METRE_PER_SECOND_SQUARED,
                                                                      identifier=OM_IDS.NAMESPACE + 'kilogramMetrePerSecond')

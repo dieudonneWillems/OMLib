@@ -218,7 +218,7 @@ class TestUnits(unittest.TestCase):
         m1.convert_to_convenient_units()
         self.assertEqual(pa, m1.unit)
         self.assertAlmostEqual(12.343, m1.numericalValue, delta=0.00001)
-        m2 = Measure(12.343, kg_m1_s2)
+        m2 = Measure(12.343, pa)
         m2.convert_to_convenient_units(system_of_units=SI.SYSTEM_OF_UNITS)
         self.assertEqual(pa, m2.unit)
         self.assertAlmostEqual(12.343, m2.numericalValue, delta=0.00001)

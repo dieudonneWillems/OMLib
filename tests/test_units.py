@@ -75,7 +75,7 @@ class TestUnits(unittest.TestCase):
         ms2 = UnitDivision(m, ss)
         ms2_dim = Dimension(-2, 1, 0, 0, 0, 0, 0)
         self.assertTrue(ms2.label() is None)
-        self.assertEqual('m/(s.s)', ms2.symbol().value)
+        self.assertEqual('m/s2', ms2.symbol().value)
         self.assertEqual(ms2_dim, ms2.dimensions)
 
     def test__unit_compound_2(self):
@@ -99,7 +99,7 @@ class TestUnits(unittest.TestCase):
         ms2 = UnitDivision(m, s2)
         ms2_dim = Dimension(-2, 1, 0, 0, 0, 0, 0)
         self.assertTrue(ms2.label() is None)
-        self.assertEqual('m/(s2)', ms2.symbol().value)
+        self.assertEqual('m/s2', ms2.symbol().value)
         self.assertEqual(ms2_dim, ms2.dimensions)
 
     def test_unit_get(self):
@@ -269,7 +269,8 @@ class TestUnits(unittest.TestCase):
         m2 = Unit.get_unit_exponentiation(m, 2)
         n_m2 = Unit.get_unit_division(n, m2)
         pa = Unit.get_singular_unit("Pascal", "Pa", base_unit=n_m2, identifier=OM.NAMESPACE + 'Pascal')
-        psi = Unit.get_unit_division(lbf, inch2, symbol="psi")
+        lbf_inch2 = Unit.get_unit_division(lbf, inch2)
+        psi = Unit.get_singular_unit("Psi", "psi", base_unit=lbf_inch2, identifier=OM.NAMESPACE + 'psi')
         n_to_lbf = Unit.conversion_factor(n, lbf)
         self.assertAlmostEqual(0.22481, n_to_lbf, delta=0.0001)
         lbf_to_n = Unit.conversion_factor(lbf, n)
@@ -412,9 +413,9 @@ class TestUnits(unittest.TestCase):
     def test_unit_simplification(self):
         m_s = Unit.get_unit_division(SI.METRE, SI.SECOND)
         m_s2 = Unit.get_unit_division(m_s, SI.SECOND)
-        self.assertEqual('m/s2', m_s2.symbol())
+        self.assertEqual('m/s2', str(m_s2.symbol()))
         kgm_s2 = Unit.get_unit_multiplication(SI.KILOGRAM, m_s2)
-        self.assertEqual('kg.m/s2', kgm_s2.symbol())
+        self.assertEqual('(kg.m)/s2', str(kgm_s2.symbol()))
         m2 = Unit.get_unit_exponentiation(SI.METRE, 2)
         kg_ms2 = Unit.get_unit_division(kgm_s2, m2)
-        self.assertEqual('kg/(m.s2)', kg_ms2.symbol())
+        self.assertEqual('kg/(m.s2)', str(kg_ms2.symbol()))

@@ -49,7 +49,8 @@ class TestUnits(unittest.TestCase):
         m2 = Unit.get_unit_exponentiation(m, 2)
         n_m2 = Unit.get_unit_division(n, m2)
         pa = Unit.get_singular_unit("Pascal", "Pa", base_unit=n_m2, identifier=OM.NAMESPACE + 'Pascal')
-        psi = Unit.get_unit_division(lbf, inch2, symbol="psi", identifier=OM.NAMESPACE + 'psi')
+        lbf_inch2 = Unit.get_unit_division(lbf, inch2)
+        psi = Unit.get_singular_unit("Psi", "psi", base_unit=lbf_inch2, identifier=OM.NAMESPACE + 'psi')
         measure = Measure(12.2, psi)
         self.assertAlmostEqual(12.2, measure.numericalValue, delta=0.1)
         self.assertEqual(str(OM.NAMESPACE + 'psi'), str(measure.unit.identifier))
@@ -208,10 +209,10 @@ class TestUnits(unittest.TestCase):
         s2 = Unit.get_unit_exponentiation(SI.SECOND, 2)
         m1_s2 = Unit.get_unit_multiplication(SI.METRE, s2)
         kg_m1_s2 = Unit.get_unit_division(SI.KILOGRAM, m1_s2)
-        Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2)
+        pa = Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2)
         m1 = Measure(12.343, kg_m1_s2)
         m1.convert_to_convenient_units()
-        self.assertEqual(kg_m1_s2, m1.unit)  # Pa not in correct system of units
+        self.assertEqual(pa, m1.unit)  # Pa not in correct system of units
         self.assertAlmostEqual(12.343, m1.numericalValue, delta=0.00001)
         m2 = Measure(12.343, kg_m1_s2)
         m2.convert_to_convenient_units(system_of_units=SI.SYSTEM_OF_UNITS)

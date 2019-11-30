@@ -117,7 +117,7 @@ class TestUnits(unittest.TestCase):
     def test_singular_unit_conversion_1(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
-        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+        inch = IMPERIAL.INCH
         m_to_inch_factor = Unit.conversion_factor(m, inch)
         self.assertAlmostEqual(39.3700787, m_to_inch_factor, delta=0.00001)
         inch_to_m_factor = Unit.conversion_factor(inch, m)
@@ -126,8 +126,7 @@ class TestUnits(unittest.TestCase):
     def test_singular_unit_conversion_2(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
-        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
-        feet = Unit.get_singular_unit('feet', 'ft', base_unit=inch, factor=12, identifier=OM.NAMESPACE + 'feet')
+        feet = IMPERIAL.FOOT
         m_to_feet_factor = Unit.conversion_factor(m, feet)
         self.assertAlmostEqual(3.280839895, m_to_feet_factor, delta=0.0001)
         feet_to_m_factor = Unit.conversion_factor(feet, m)
@@ -181,8 +180,7 @@ class TestUnits(unittest.TestCase):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
         km = Unit.get_prefixed_unit(SI.KILO, m, OM.NAMESPACE + 'kilometre')
-        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
-        feet = Unit.get_singular_unit('feet', 'ft', base_unit=inch, factor=12, identifier=OM.NAMESPACE + 'feet')
+        feet = IMPERIAL.FOOT
         feet_to_km_factor = Unit.conversion_factor(feet, km)
         self.assertAlmostEqual(0.0003048, feet_to_km_factor, delta=0.0001)
         km_to_feet_factor = Unit.conversion_factor(km, feet)
@@ -254,7 +252,7 @@ class TestUnits(unittest.TestCase):
         t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
         m_dim = Dimension(0, 0, 1, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', l_dim, identifier=OM.NAMESPACE + 'metre')
-        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+        inch = IMPERIAL.INCH
         inch2 = Unit.get_unit_exponentiation(inch, 2)
         s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
         g = Unit.get_singular_unit('gram', 'g', m_dim, identifier=OM.NAMESPACE + 'gram')
@@ -346,7 +344,7 @@ class TestUnits(unittest.TestCase):
 
     def test_base_units_2(self):
         m = SI.METRE
-        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+        inch = IMPERIAL.INCH
         base = Unit.get_base_units(inch, SI.SYSTEM_OF_UNITS)
         self.assertEqual(m.identifier, base.identifier)
         self.assertNotEqual(inch.identifier, base.identifier)

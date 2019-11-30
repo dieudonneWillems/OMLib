@@ -408,3 +408,13 @@ class TestUnits(unittest.TestCase):
         base2 = Unit.get_base_units(kg_m, IMPERIAL.SYSTEM_OF_UNITS)
         self.assertEqual(lb_yd, base2)
         self.assertNotEqual(kg_m, base2)
+
+    def test_unit_simplification(self):
+        m_s = Unit.get_unit_division(SI.METRE, SI.SECOND)
+        m_s2 = Unit.get_unit_division(m_s, SI.SECOND)
+        self.assertEqual('m/s2', m_s2.symbol())
+        kgm_s2 = Unit.get_unit_multiplication(SI.KILOGRAM, m_s2)
+        self.assertEqual('kg.m/s2', kgm_s2.symbol())
+        m2 = Unit.get_unit_exponentiation(SI.METRE, 2)
+        kg_ms2 = Unit.get_unit_division(kgm_s2, m2)
+        self.assertEqual('kg/(m.s2)', kg_ms2.symbol())

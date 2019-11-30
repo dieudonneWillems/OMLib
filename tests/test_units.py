@@ -419,3 +419,13 @@ class TestUnits(unittest.TestCase):
         m2 = Unit.get_unit_exponentiation(SI.METRE, 2)
         kg_ms2 = Unit.get_unit_division(kgm_s2, m2)
         self.assertEqual('kg/(m.s2)', str(kg_ms2.symbol()))
+
+    def test_unit_simplification_2(self):
+        yard_s = Unit.get_unit_division(IMPERIAL.YARD, SI.SECOND)
+        yard_s2 = Unit.get_unit_division(yard_s, SI.SECOND)
+        self.assertEqual('yd/s2', str(yard_s2.symbol()))
+        kgyard_s2 = Unit.get_unit_multiplication(SI.KILOGRAM, yard_s2)
+        self.assertEqual('(kg.yd)/s2', str(kgyard_s2.symbol()))
+        m2 = Unit.get_unit_exponentiation(SI.METRE, 2)
+        kgyard_m2s2 = Unit.get_unit_division(kgyard_s2, m2)
+        self.assertEqual('(kg.yd)/(s2.m2)', str(kgyard_m2s2.symbol()))

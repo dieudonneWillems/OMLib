@@ -555,6 +555,8 @@ class SingularUnit(Unit):
                  system_of_units=None, is_base_unit=False):
         if base_unit is not None:
             dimensions = base_unit.dimensions
+        if system_of_units is None and not is_base_unit and base_unit is not None:
+            system_of_units = base_unit.systemOfUnits
         super().__init__(label, symbol, dimensions, identifier, system_of_units=system_of_units,
                          is_base_unit=is_base_unit)
         self.factor = factor
@@ -618,8 +620,14 @@ class PrefixedUnit(Unit):
     def get_base_units_exponents(self):
         base_base = self.baseUnit.get_base_units_exponents()
         result = []
+        factor_added = False
         for exponents in base_base:
-            converted = [exponents[0], exponents[1], exponents[2] * self.prefix.factor]
+            if not factor_added:
+                corrected_factor = pow(self.prefix.factor, 1/(exponents[1]))
+                converted = [exponents[0], exponents[1], exponents[2] * corrected_factor]
+                factor_added = True
+            else:
+                converted = exponents
             result.append(converted)
         return result
 

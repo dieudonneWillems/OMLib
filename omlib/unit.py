@@ -1,10 +1,10 @@
-from rdflib import Literal, XSD, URIRef
+from rdflib import URIRef
 
-from exceptions.dimensionexception import DimensionalException
-from exceptions.unitconversionexception import UnitConversionException
-from exceptions.unitidentityexception import UnitIdentityException
+from omlib.exceptions.dimensionexception import DimensionalException
+from omlib.exceptions.unitconversionexception import UnitConversionException
+from omlib.exceptions.unitidentityexception import UnitIdentityException
 from omlib.dimension import Dimension
-from omlib.thing import Thing, SymbolThing
+from omlib.thing import SymbolThing
 
 
 class Unit(SymbolThing):
@@ -36,6 +36,14 @@ class Unit(SymbolThing):
         return None
 
     @staticmethod
+    def with_prefix(prefix, base):
+        for unit in Unit._units:
+            if isinstance(unit, PrefixedUnit):
+                if unit.baseUnit == base and unit.prefix == prefix:
+                    return unit
+        return None
+
+    @staticmethod
     def with_multiplication(multiplier, multiplicand):
         for unit in Unit._units:
             if isinstance(unit, UnitMultiplication):
@@ -60,14 +68,44 @@ class Unit(SymbolThing):
         return None
 
     @staticmethod
-    def with_dimensions(dimensions):
+    def with_dimensions(dimensions, in_system_of_units=None):
         if isinstance(dimensions, Dimension):
             get_units = []
             for test_unit in Unit._units:
                 if test_unit.dimensions == dimensions:
-                    get_units.append(test_unit)
+                    if in_system_of_units is None or test_unit.systemOfUnits == in_system_of_units:
+                        get_units.append(test_unit)
             return get_units
         return None
+
+    @staticmethod
+    def get_base_units(for_unit, in_system_of_units="SI"):  # WARNING If you change "SI" also change in constants.py
+        if isinstance(for_unit, SingularUnit) or isinstance(for_unit, PrefixedUnit) \
+                or isinstance(for_unit, UnitMultiple):
+            units = Unit.with_dimensions(for_unit.dimensions)
+            for unit in units:
+                if unit.isBaseUnit and unit.systemOfUnits == in_system_of_units:
+                    return unit
+        if isinstance(for_unit, UnitMultiplication):
+            base_multiplier = Unit.get_base_units(for_unit.multiplier, in_system_of_units)
+            base_multiplicand = Unit.get_base_units(for_unit.multiplicand, in_system_of_units)
+            if base_multiplier is not None and base_multiplicand is not None:
+                unit = Unit.get_unit_multiplication(base_multiplier, base_multiplicand,
+                                                    system_of_units=in_system_of_units)
+                return unit
+        if isinstance(for_unit, UnitDivision):
+            base_numerator = Unit.get_base_units(for_unit.numerator, in_system_of_units)
+            base_denominator = Unit.get_base_units(for_unit.denominator, in_system_of_units)
+            if base_numerator is not None and base_denominator is not None:
+                unit = Unit.get_unit_division(base_numerator, base_denominator, system_of_units=in_system_of_units)
+                return unit
+        if isinstance(for_unit, UnitExponentiation):
+            base_base = Unit.get_base_units(for_unit.base, in_system_of_units)
+            if base_base is not None:
+                unit = Unit.get_unit_exponentiation(base_base, for_unit.exponent, system_of_units=in_system_of_units)
+                return unit
+        raise UnitIdentityException("Cannot find a base unit for {} in the system of units: {}"
+                                    .format(for_unit, in_system_of_units))
 
     @staticmethod
     def __add_when_not_duplicate(unit):
@@ -97,16 +135,6 @@ class Unit(SymbolThing):
             result_unit = unit
             Unit._units.append(unit)
         return result_unit
-
-    @staticmethod
-    def __add_unit(unit):
-        duplicate = False
-        if isinstance(unit.identifier, URIRef):
-            if Unit.with_identifier(unit.identifier) is not None:
-                duplicate = True
-        print("Unit adding: {} duplicate: {}".format(unit, duplicate))
-        if not duplicate:
-            Unit._units.append(unit)
 
     @staticmethod
     def conversion_factor(from_unit, to_unit):
@@ -188,7 +216,8 @@ class Unit(SymbolThing):
             raise ValueError("The second argument of can_convert is required to be of type Unit.")
 
     @staticmethod
-    def get_singular_unit(label, symbol, dimensions=Dimension(), base_unit=None, factor=1.0, identifier=None, cache=True):
+    def get_singular_unit(label, symbol, dimensions=Dimension(), base_unit=None, factor=1.0, identifier=None,
+                          cache=True, system_of_units=None, is_base_unit=False):
         unit = None
         if identifier is not None:
             test_unit = Unit.with_identifier(identifier)
@@ -208,13 +237,13 @@ class Unit(SymbolThing):
                                                         " as the earlier defined unit with the same identifier.")
                 return test_unit
         if unit is None:
-            unit = SingularUnit(label, symbol, dimensions, base_unit, factor, identifier)
+            unit = SingularUnit(label, symbol, dimensions, base_unit, factor, identifier, system_of_units, is_base_unit)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit
 
     @staticmethod
-    def get_prefixed_unit(prefix, base_unit, identifier=None, cache=True):
+    def get_prefixed_unit(prefix, base_unit, identifier=None, cache=True, system_of_units=None, is_base_unit=False):
         unit = None
         if identifier is not None:
             test_unit = Unit.with_identifier(identifier)
@@ -233,13 +262,27 @@ class Unit(SymbolThing):
                                                     " as the earlier defined unit with the same identifier.")
                 return test_unit
         if unit is None:
-            unit = PrefixedUnit(prefix, base_unit, identifier)
+            test_unit = Unit.with_prefix(prefix, base_unit)
+            if test_unit is not None:
+                if identifier is not None and not isinstance(test_unit.identifier, URIRef):
+                    test_unit.identifier = URIRef(identifier)
+                if system_of_units is not None and test_unit.systemOfUnits is None:
+                    test_unit.systemOfUnits = system_of_units
+                if is_base_unit and not test_unit.isBaseUnit:
+                    test_unit.isBaseUnit = is_base_unit
+                return test_unit
+        if unit is None:
+            if system_of_units is None:
+                system_of_units = base_unit.systemOfUnits
+            unit = PrefixedUnit(prefix, base_unit, identifier, system_of_units=system_of_units,
+                                is_base_unit=is_base_unit)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit
 
     @staticmethod
-    def get_unit_multiple(base_unit, factor=1.0, identifier=None, label=None, symbol=None, cache=True):
+    def get_unit_multiple(base_unit, factor=1.0, identifier=None, label=None, symbol=None, cache=True,
+                          system_of_units=None):
         unit = None
         if identifier is not None:
             test_unit = Unit.with_identifier(identifier)
@@ -253,16 +296,18 @@ class Unit(SymbolThing):
                     if base_identifier != test_identifier:
                         raise UnitIdentityException("The requested UnitMultiple uses a different base unit"
                                                     " as the earlier defined unit with the same identifier.")
+                if system_of_units is not None:
+                    test_unit.systemOfUnits = system_of_units
                 return test_unit
         if unit is None:
-            unit = UnitMultiple(base_unit, factor, identifier, label, symbol)
+            unit = UnitMultiple(base_unit, factor, identifier, label, symbol, system_of_units)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit
 
     @staticmethod
-    def get_unit_multiplication(multiplier, multiplicand, symbol=None, identifier=None, cache=True):
-        unit = None
+    def get_unit_multiplication(multiplier, multiplicand, symbol=None, identifier=None, cache=True,
+                                system_of_units=None):
         if identifier is not None:
             for test_unit in Unit._units:
                 if str(test_unit.identifier) == str(identifier):
@@ -275,27 +320,35 @@ class Unit(SymbolThing):
                             raise UnitIdentityException("The requested UnitMultiplication uses a different pair of"
                                                         " units as multiplier and multiplicand as the earlier defined"
                                                         " unit with the same identifier.")
-                    unit = test_unit
+                    if system_of_units is not None:
+                        test_unit.systemOfUnits = system_of_units
+                    return test_unit
         unit = Unit.with_multiplication(multiplier, multiplicand)
         if unit is not None:
             if identifier is not None:
                 unit.identifier = identifier
             if symbol is not None:
                 unit.add_symbol(symbol)
+            if system_of_units is not None:
+                unit.systemOfUnits = system_of_units
         if unit is None:
             for unit in Unit._units:
                 if isinstance(unit, UnitMultiplication):
                     if str(multiplier.identifier) == str(unit.multiplier.identifier) and \
                             str(multiplicand.identifier) == str(unit.multiplicand.identifier):
+                        if system_of_units is not None:
+                            unit.systemOfUnits = system_of_units
                         return unit
-            unit = UnitMultiplication(multiplier, multiplicand, symbol, identifier)
+            if system_of_units is None and multiplier.systemOfUnits is not None and \
+                    multiplicand.systemOfUnits is not None and multiplicand.systemOfUnits == multiplier.systemOfUnits:
+                system_of_units = multiplier.systemOfUnits
+            unit = UnitMultiplication(multiplier, multiplicand, symbol, identifier, system_of_units)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit
 
     @staticmethod
-    def get_unit_division(numerator, denominator, symbol=None, identifier=None, cache=True):
-        unit = None
+    def get_unit_division(numerator, denominator, symbol=None, identifier=None, cache=True, system_of_units=None):
         if identifier is not None:
             for test_unit in Unit._units:
                 if str(test_unit.identifier) == str(identifier):
@@ -308,26 +361,35 @@ class Unit(SymbolThing):
                             raise UnitIdentityException("The requested UnitDivision uses a different pair of"
                                                         " units as numerator and denominator as the earlier "
                                                         "defined unit with the same identifier.")
-                    unit = test_unit
+                    if system_of_units is not None:
+                        test_unit.systemOfUnits = system_of_units
+                    return test_unit
         unit = Unit.with_division(numerator, denominator)
         if unit is not None:
             if identifier is not None:
                 unit.identifier = identifier
             if symbol is not None:
                 unit.add_symbol(symbol)
+            if system_of_units is not None:
+                unit.systemOfUnits = system_of_units
         if unit is None:
             for unit in Unit._units:
                 if isinstance(unit, UnitDivision):
                     if str(numerator.identifier) == str(unit.numerator.identifier) and \
                             str(denominator.identifier) == str(unit.denominator.identifier):
+                        if system_of_units is not None:
+                            unit.systemOfUnits = system_of_units
                         return unit
-            unit = UnitDivision(numerator, denominator, symbol, identifier)
+            if system_of_units is None and denominator.systemOfUnits is not None and \
+                    numerator.systemOfUnits is not None and numerator.systemOfUnits == denominator.systemOfUnits:
+                system_of_units = numerator.systemOfUnits
+            unit = UnitDivision(numerator, denominator, symbol, identifier, system_of_units)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit
 
     @staticmethod
-    def get_unit_exponentiation(base, exponent, symbol=None, identifier=None, cache=True):
+    def get_unit_exponentiation(base, exponent, symbol=None, identifier=None, cache=True, system_of_units=None):
         unit = None
         if identifier is not None:
             for test_unit in Unit._units:
@@ -342,26 +404,37 @@ class Unit(SymbolThing):
                         if exponent != test_unit.exponent:
                             raise UnitIdentityException("The requested UnitExponentiation uses a different exponent as"
                                                         " the earlier defined unit with the same identifier.")
-                            return test_unit
+                    if system_of_units is not None:
+                        unit.systemOfUnits = system_of_units
+                    return test_unit
         unit = Unit.with_exponentiation(base, exponent)
         if unit is not None:
             if identifier is not None:
                 unit.identifier = identifier
             if symbol is not None:
                 unit.add_symbol(symbol)
+            if system_of_units is not None:
+                unit.systemOfUnits = system_of_units
         if unit is None:
             for unit in Unit._units:
                 if isinstance(unit, UnitExponentiation):
                     if str(base.identifier) == str(unit.base.identifier) and \
                             exponent == unit.exponent:
+                        if system_of_units is not None:
+                            unit.systemOfUnits = system_of_units
                         return unit
-            unit = UnitExponentiation(base, exponent, symbol, identifier)
+            if system_of_units is None and base.systemOfUnits is not None:
+                system_of_units = base.systemOfUnits
+            unit = UnitExponentiation(base, exponent, symbol, identifier, system_of_units)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit
 
-    def __init__(self, label=None, symbol=None, dimensions=Dimension(), identifier=None):
+    def __init__(self, label=None, symbol=None, dimensions=Dimension(), identifier=None, system_of_units=None,
+                 is_base_unit=False):
         super().__init__(label, symbol, identifier)
+        self.isBaseUnit = is_base_unit
+        self.systemOfUnits = system_of_units
         self.dimensions = dimensions
 
     def __str__(self):
@@ -395,19 +468,21 @@ class Prefix(object):
 
 class SingularUnit(Unit):
 
-    def __init__(self, label, symbol, dimensions=Dimension(), base_unit=None, factor=1.0, identifier=None):
+    def __init__(self, label, symbol, dimensions=Dimension(), base_unit=None, factor=1.0, identifier=None,
+                 system_of_units=None, is_base_unit=False):
         if base_unit is not None:
             dimensions = base_unit.dimensions
-        super().__init__(label, symbol, dimensions, identifier)
+        super().__init__(label, symbol, dimensions, identifier, system_of_units=system_of_units,
+                         is_base_unit=is_base_unit)
         self.factor = factor
         self.baseUnit = base_unit
 
     def __eq__(self, other):
         if isinstance(other, SingularUnit):
             if not isinstance(self.identifier, URIRef) or not isinstance(other.identifier, URIRef):
-                if self.baseUnit is None and other.baseUnit == self:
+                if self.baseUnit is None and other.baseUnit == self and other.factor == self.factor:
                     return True
-                if other.baseUnit is None and self.baseUnit == other:
+                if other.baseUnit is None and self.baseUnit == other and other.factor == self.factor:
                     return True
                 if other.baseUnit == self.baseUnit and other.factor == self.factor:
                     return True
@@ -434,12 +509,13 @@ class SingularUnit(Unit):
 
 class PrefixedUnit(Unit):
 
-    def __init__(self, prefix, base_unit, identifier=None):
+    def __init__(self, prefix, base_unit, identifier=None, system_of_units=None, is_base_unit=False):
         label = f'{prefix.name}{base_unit.label()}'
         symbol = f'{prefix.symbol}{base_unit.symbol()}'
         self.prefix = prefix
         self.baseUnit = base_unit
-        super().__init__(label, symbol, dimensions=self.baseUnit.dimensions, identifier=identifier)
+        super().__init__(label, symbol, dimensions=self.baseUnit.dimensions, identifier=identifier,
+                         system_of_units=system_of_units, is_base_unit=is_base_unit)
 
     def __eq__(self, other):
         if isinstance(other, PrefixedUnit):
@@ -461,23 +537,27 @@ class PrefixedUnit(Unit):
 
 class UnitMultiple(SingularUnit):
 
-    def __init__(self, base_unit, factor=1.0, identifier=None, label=None, symbol=None):
+    def __init__(self, base_unit, factor=1.0, identifier=None, label=None, symbol=None, system_of_units=None,
+                 is_base_unit=False):
         if label is None:
             label = f'{factor} {base_unit.label()}'
         if symbol is None:
             symbol = f'{factor}{base_unit.symbol()}'
-        super().__init__(label, symbol, base_unit.dimensions, base_unit, factor, identifier)
+        super().__init__(label, symbol, base_unit.dimensions, base_unit, factor, identifier,
+                         system_of_units=system_of_units, is_base_unit=is_base_unit)
 
 
 class CompoundUnit(Unit):
 
-    def __init__(self, symbol, dimensions, identifier=None):
-        super().__init__(None, symbol, dimensions, identifier)
+    def __init__(self, symbol, dimensions, identifier=None, system_of_units=None, is_base_unit=False):
+        super().__init__(None, symbol, dimensions, identifier, system_of_units=system_of_units,
+                         is_base_unit=is_base_unit)
 
 
 class UnitMultiplication(CompoundUnit):
 
-    def __init__(self, multiplier, multiplicand, symbol=None, identifier=None):
+    def __init__(self, multiplier, multiplicand, symbol=None, identifier=None, system_of_units=None,
+                 is_base_unit=False):
         dimensions = multiplier.dimensions * multiplicand.dimensions
         if symbol is None:
             multiplier_str = str(multiplier.symbol())
@@ -487,7 +567,7 @@ class UnitMultiplication(CompoundUnit):
             if isinstance(multiplicand, CompoundUnit):
                 multiplicand_str = f'({multiplicand_str})'
             symbol = f'{multiplier_str}.{multiplicand_str}'
-        super().__init__(symbol, dimensions, identifier)
+        super().__init__(symbol, dimensions, identifier, system_of_units=system_of_units, is_base_unit=is_base_unit)
         self.multiplier = multiplier
         self.multiplicand = multiplicand
 
@@ -513,7 +593,7 @@ class UnitMultiplication(CompoundUnit):
 
 class UnitDivision(CompoundUnit):
 
-    def __init__(self, numerator, denominator, symbol=None, identifier=None):
+    def __init__(self, numerator, denominator, symbol=None, identifier=None, system_of_units=None, is_base_unit=False):
         dimensions = numerator.dimensions / denominator.dimensions
         if symbol is None:
             numerator_str = str(numerator.symbol())
@@ -523,7 +603,7 @@ class UnitDivision(CompoundUnit):
             if isinstance(denominator, CompoundUnit):
                 denominator_str = f'({denominator_str})'
             symbol = f'{numerator_str}/{denominator_str}'
-        super().__init__(symbol, dimensions, identifier)
+        super().__init__(symbol, dimensions, identifier, system_of_units=system_of_units, is_base_unit=is_base_unit)
         self.numerator = numerator
         self.denominator = denominator
 
@@ -548,14 +628,14 @@ class UnitDivision(CompoundUnit):
 
 class UnitExponentiation(CompoundUnit):
 
-    def __init__(self, base, exponent, symbol=None, identifier=None):
+    def __init__(self, base, exponent, symbol=None, identifier=None, system_of_units=None, is_base_unit=False):
         dimensions = Dimension.pow(base.dimensions, exponent)
         if symbol is None:
             base_str = str(base.symbol())
             if isinstance(base, CompoundUnit):
                 base_str = f'({base_str})'
             symbol = f'{base_str}{exponent}'
-        super().__init__(symbol, dimensions, identifier)
+        super().__init__(symbol, dimensions, identifier, system_of_units=system_of_units, is_base_unit=is_base_unit)
         self.base = base
         self.exponent = exponent
 

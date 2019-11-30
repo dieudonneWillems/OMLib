@@ -1,10 +1,10 @@
 import unittest
 
-from exceptions.dimensionexception import DimensionalException
-from exceptions.unitconversionexception import UnitConversionException
-from omlib.constants import OM, SI
+from omlib.exceptions.dimensionexception import DimensionalException
+from omlib.exceptions.unitconversionexception import UnitConversionException
+from omlib.constants import OM, SI, IMPERIAL
 from omlib.dimension import Dimension
-from omlib.unit import SingularUnit, PrefixedUnit, UnitMultiple, UnitDivision, UnitMultiplication, UnitExponentiation, \
+from omlib.unit import UnitDivision, UnitExponentiation, \
     Unit
 
 
@@ -138,14 +138,14 @@ class TestUnits(unittest.TestCase):
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
         myl = Unit.get_singular_unit('my length unit', 'myl', m_dim, identifier=OM.NAMESPACE + 'myl')
         try:
-            m_to_myl_factor = Unit.conversion_factor(m, myl)
+            Unit.conversion_factor(m, myl)
             self.fail("Singular units that do not have a common base should not be converted between each other")
         except UnitConversionException as error:
             self.assertTrue(True)
         km = Unit.get_prefixed_unit(SI.KILO, m, OM.NAMESPACE + 'kilometre')
         myl67 = Unit.get_unit_multiple(myl, 67.0, symbol='67myl')
         try:
-            km_to_myl67_factor = Unit.conversion_factor(km, myl67)
+            Unit.conversion_factor(km, myl67)
             self.fail("Singular units that do not have a common base should not be converted between each other")
         except UnitConversionException as error:
             self.assertTrue(True)
@@ -158,12 +158,12 @@ class TestUnits(unittest.TestCase):
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
         s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
         try:
-            m_to_s_factor = Unit.conversion_factor(m, s)
+            Unit.conversion_factor(m, s)
             self.fail("Singular units that have different dimension cannot be converted between each other.")
         except DimensionalException as error:
             self.assertTrue(True)
         try:
-            s_to_m_factor = Unit.conversion_factor(s, m)
+            Unit.conversion_factor(s, m)
             self.fail("Singular units that have different dimension cannot be converted between each other.")
         except DimensionalException as error:
             self.assertTrue(True)
@@ -335,3 +335,76 @@ class TestUnits(unittest.TestCase):
         self.assertAlmostEqual(10.0, m2_10_to_m2, delta=0.001)
         m2_to_m2_10 = Unit.conversion_factor(m2, m2_10)
         self.assertAlmostEqual(0.1, m2_to_m2_10, delta=0.00001)
+
+    def test_base_units_1(self):
+        m = SI.METRE
+        km = Unit.get_prefixed_unit(SI.KILO, m)
+        base = Unit.get_base_units(km, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m.identifier, base.identifier)
+        self.assertNotEqual(km.identifier, base.identifier)
+
+    def test_base_units_2(self):
+        m = SI.METRE
+        inch = Unit.get_singular_unit('inch', '\'', base_unit=m, factor=2.54e-2, identifier=OM.NAMESPACE + 'inch')
+        base = Unit.get_base_units(inch, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m.identifier, base.identifier)
+        self.assertNotEqual(inch.identifier, base.identifier)
+
+    def test_base_units_3(self):
+        m = SI.METRE
+        km = Unit.get_prefixed_unit(SI.KILO, m)
+        km100 = Unit.get_unit_multiple(km, 100, label="100 kilometre", symbol="100km")
+        base = Unit.get_base_units(km100, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m.identifier, base.identifier)
+        self.assertNotEqual(km100.identifier, base.identifier)
+
+    def test_base_units_4(self):
+        km = Unit.get_prefixed_unit(SI.KILO, SI.METRE)
+        hour = Unit.get_singular_unit("hour", "h", base_unit=SI.SECOND, factor=3600)
+        m_s = Unit.get_unit_division(SI.METRE, SI.SECOND)
+        km_h = Unit.get_unit_division(km, hour)
+        base = Unit.get_base_units(km_h, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m_s.identifier, base.identifier)
+        self.assertNotEqual(km_h.identifier, base.identifier)
+
+    def test_base_units_imperial_1(self):
+        m = SI.METRE
+        yd = IMPERIAL.YARD
+        base = Unit.get_base_units(m, IMPERIAL.SYSTEM_OF_UNITS)
+        self.assertEqual(yd.identifier, base.identifier)
+        self.assertNotEqual(m.identifier, base.identifier)
+
+    def test_base_units_imperial_2(self):
+        kg = SI.KILOGRAM
+        lb = IMPERIAL.POUND
+        base = Unit.get_base_units(kg, IMPERIAL.SYSTEM_OF_UNITS)
+        self.assertEqual(lb.identifier, base.identifier)
+        self.assertNotEqual(kg.identifier, base.identifier)
+
+    def test_base_units_imperial_3(self):
+        m = SI.METRE
+        yd = IMPERIAL.YARD
+        base = Unit.get_base_units(yd, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(m.identifier, base.identifier)
+        self.assertNotEqual(yd.identifier, base.identifier)
+
+    def test_base_units_imperial_4(self):
+        kg = SI.KILOGRAM
+        lb = IMPERIAL.POUND
+        base = Unit.get_base_units(lb, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(kg.identifier, base.identifier)
+        self.assertNotEqual(lb.identifier, base.identifier)
+
+    def test_base_units_imperial_5(self):
+        kg = SI.KILOGRAM
+        lb = IMPERIAL.POUND
+        m = SI.METRE
+        yd = IMPERIAL.YARD
+        kg_m = Unit.get_unit_division(kg, m)
+        lb_yd = Unit.get_unit_division(lb, yd)
+        base = Unit.get_base_units(lb_yd, SI.SYSTEM_OF_UNITS)
+        self.assertEqual(kg_m, base)
+        self.assertNotEqual(lb_yd, base)
+        base2 = Unit.get_base_units(kg_m, IMPERIAL.SYSTEM_OF_UNITS)
+        self.assertEqual(lb_yd, base2)
+        self.assertNotEqual(kg_m, base2)

@@ -489,5 +489,4 @@ class TestUnits(unittest.TestCase):
         m1 = om(2, portion)
         m2 = om(34, kcal_p32g)
         m3 = m1 * m2
-        print("Energy: m1 * m2 = {}".format(m3))
-        self.assertEqual("kCal", str(m3.unit.symbol()))
+        self.assertEqual("kcal", str(m3.unit.symbol()))

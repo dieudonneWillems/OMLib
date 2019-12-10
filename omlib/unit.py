@@ -153,23 +153,32 @@ class Unit(SymbolThing):
             reduced.sort(key=Unit.cmp_to_key(Unit.__exponents_cmp))
             numerator = None
             denominator = None
+            units_in_numerator = 0
+            units_in_denominator = 0
+            for red in reduced:
+                if red[1] > 0:
+                    units_in_numerator += 1
+                if red[1] < 0:
+                    units_in_denominator += 1
             for red in reduced:
                 if red[1] > 0:
                     unit_exp = red[0]
-                    if red[1] > 1:
-                        unit_exp = UnitExponentiation(red[0], red[1])
-                    if numerator is None:
-                        numerator = unit_exp
-                    else:
-                        numerator = UnitMultiplication(numerator, unit_exp)
+                    if units_in_numerator <= 1 or str(unit_exp.identifier) != "http://www.ontology-of-units-of-measure.org/resource/om-2/one":
+                        if red[1] > 1:
+                            unit_exp = UnitExponentiation(red[0], red[1])
+                        if numerator is None:
+                            numerator = unit_exp
+                        else:
+                            numerator = UnitMultiplication(numerator, unit_exp)
                 if red[1] < 0:
                     unit_exp = red[0]
-                    if red[1] < -1:
-                        unit_exp = UnitExponentiation(red[0], -red[1])
-                    if denominator is None:
-                        denominator = unit_exp
-                    else:
-                        denominator = UnitMultiplication(denominator, unit_exp)
+                    if unit_exp.identifier != str("http://www.ontology-of-units-of-measure.org/resource/om-2/one"):
+                        if red[1] < -1:
+                            unit_exp = UnitExponentiation(red[0], -red[1])
+                        if denominator is None:
+                            denominator = unit_exp
+                        else:
+                            denominator = UnitMultiplication(denominator, unit_exp)
             if numerator is None:
                 numerator = Unit.get_singular_unit('one', '', Dimension())
             if denominator is None:

@@ -480,3 +480,13 @@ class TestUnits(unittest.TestCase):
         self.assertTrue(isinstance(m3, Measure))
         self.assertAlmostEqual(13.59375, m3.numericalValue, delta=0.00001)
         self.assertEqual("m/K", str(m3.unit.symbol()))
+
+    def test_multiplication_with_one(self):
+        portion = Unit.get_unit_multiple(SI.GRAM, 32.0, label="portion", symbol="portion")
+        p32g = Unit.get_unit_division(OM.ONE, portion)
+        kcal_p32g = Unit.get_unit_multiplication(OM.KILOCALORIE, p32g)
+        m1 = om(2, portion)
+        m2 = om(34, kcal_p32g)
+        m3 = m1 * m2
+        print("Energy: m1 * m2 = {}".format(m3))
+        self.assertEqual("kCal", str(m3.unit.symbol()))

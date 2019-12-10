@@ -94,7 +94,7 @@ class OM:
     NAMESPACE = OM_IDS.NAMESPACE
     LENGTH_DIMENSION = OM_IDS.LENGTH_DIMENSION
 
-    ONE = Unit.get_singular_unit("one", "", dimensions=Dimension(), identifier=OM_IDS.NAMESPACE + 'one')
+    ONE = Unit.get_singular_unit("one", "1", dimensions=Dimension(), identifier=OM_IDS.NAMESPACE + 'one')
 
     CENTIMETRE = Unit.get_prefixed_unit(SI.CENTI, base_unit=SI.METRE, identifier=OM_IDS.NAMESPACE + 'centimetre')
     KILOMETRE = Unit.get_prefixed_unit(SI.KILO, base_unit=SI.METRE, identifier=OM_IDS.NAMESPACE + 'kilometre')

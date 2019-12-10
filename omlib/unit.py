@@ -136,6 +136,7 @@ class Unit(SymbolThing):
             Unit._units.append(unit)
         return result_unit
 
+
     @staticmethod
     def reduce_unit(unit):
         result = unit
@@ -155,6 +156,11 @@ class Unit(SymbolThing):
             denominator = None
             units_in_numerator = 0
             units_in_denominator = 0
+            if isinstance(unit, UnitDivision) \
+                    and not isinstance(unit.numerator, CompoundUnit) \
+                    and not isinstance(unit.denominator, CompoundUnit) \
+                    and unit.numerator.dimensions == unit.denominator.dimensions:
+                return unit
             for red in reduced:
                 if red[1] > 0:
                     units_in_numerator += 1

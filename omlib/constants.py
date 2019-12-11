@@ -37,7 +37,7 @@ class SI:
 
     # SI Base Units
     SECOND = Unit.get_singular_unit('second', 's', Dimension(1, 0, 0, 0, 0, 0, 0),
-                                    identifier=OM_IDS.NAMESPACE + 'second',
+                                    identifier=OM_IDS.NAMESPACE + 'second-Time',
                                     system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
     METRE = Unit.get_singular_unit('metre', 'm', Dimension(0, 1, 0, 0, 0, 0, 0), identifier=OM_IDS.NAMESPACE + 'metre',
                                    system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
@@ -92,6 +92,7 @@ class IMPERIAL:
 
 class OM:
     NAMESPACE = OM_IDS.NAMESPACE
+
     LENGTH_DIMENSION = URIRef(NAMESPACE + 'length-Dimension')
 
     ONE = Unit.get_singular_unit("one", "", dimensions=Dimension(), identifier=OM_IDS.NAMESPACE + 'one',

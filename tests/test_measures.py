@@ -87,6 +87,7 @@ class TestUnits(unittest.TestCase):
         t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
         s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
+        Unit.get_unit_multiplication(m, s, identifier=OM.NAMESPACE + 'metreSecond')
         value_1 = Measure(2, m)
         value_2 = Measure(50, s)
         result_value_1 = value_1 * value_2
@@ -99,7 +100,6 @@ class TestUnits(unittest.TestCase):
         self.assertTrue(isinstance(result_value_2.unit, UnitMultiplication))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_2.unit.multiplicand.identifier))
         self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_2.unit.multiplier.identifier))
-        Unit.get_unit_multiplication(m, s, identifier=OM.NAMESPACE + 'metreSecond')
         self.assertEqual(str(OM.NAMESPACE + 'metreSecond'), str(result_value_1.unit.identifier))
 
     def test_divide_measures(self):
@@ -489,5 +489,32 @@ class TestUnits(unittest.TestCase):
         m1 = om(2, portion)
         m2 = om(34, kcal_p32g)
         m3 = m1 * m2
-        print("Energy: m1 * m2 = {}".format(m3))
-        self.assertEqual("kCal", str(m3.unit.symbol()))
+        self.assertEqual("kcal", str(m3.unit.symbol()))
+
+    def test_multiplication_with_one_1(self):
+        portion = Unit.get_unit_multiple(SI.GRAM, 32.0, label="portion", symbol="portion")
+        p32g = Unit.get_unit_division(OM.ONE, portion)
+        p32g_kcal = Unit.get_unit_division(p32g, OM.KILOCALORIE)
+        m1 = om(2, portion)
+        m2 = om(34, p32g_kcal)
+        m3 = m1 * m2
+        self.assertEqual("/kcal", str(m3.unit.symbol()))
+
+    def test_multiplication_with_one_2(self):
+        g_g = Unit.get_unit_division(SI.GRAM, SI.GRAM)
+        m1 = om(0.4, g_g)
+        self.assertEqual("g/g", str(m1.unit.symbol()))
+        m2 = om(34, SI.KILOGRAM)
+        m3 = m1 * m2
+        self.assertAlmostEqual(13.6, m3.numericalValue, delta=0.0001)
+        self.assertEqual("kg", str(m3.unit.symbol()))
+
+    def test_multiplication_with_one_3(self):
+        mg = Unit.get_prefixed_unit(SI.MILLI, SI.GRAM)
+        mg_g = Unit.get_unit_division(mg, SI.GRAM)
+        m1 = om(10, mg_g)
+        self.assertEqual("mg/g", str(m1.unit.symbol()))
+        m2 = om(34, SI.KILOGRAM)
+        m3 = m2 * m1
+        self.assertEqual("kg", str(m3.unit.symbol()))
+        self.assertAlmostEqual(0.340, m3.numericalValue, delta=0.0001)

@@ -296,6 +296,8 @@ class Measure(Thing):
         new_value = self.numericalValue * other.numericalValue
         new_unit = Unit.get_unit_multiplication(self.unit, other_unit)
         new_measure = Measure(new_value, new_unit)
+        simple_unit = Unit.simplified_compound_unit(new_unit)
+        new_measure.convert(simple_unit)
         return new_measure
 
     def __truediv__(self, other):
@@ -312,4 +314,6 @@ class Measure(Thing):
         new_value = self.numericalValue / other.numericalValue
         new_unit = Unit.get_unit_division(self.unit, other_unit)
         new_measure = Measure(new_value, new_unit)
+        simple_unit = Unit.simplified_compound_unit(new_unit)
+        new_measure.convert(simple_unit)
         return new_measure

@@ -137,6 +137,148 @@ class Unit(SymbolThing):
         return result_unit
 
     @staticmethod
+    def simplified_compound_unit(unit):
+        # creates a simplified unit (e.g. kg.mg/g becomes kg), conversion to this unit is however needed afterwards.
+        if isinstance(unit, CompoundUnit):
+            if isinstance(unit, UnitDivision):
+                if not isinstance(unit.numerator, CompoundUnit) and not isinstance(unit.denominator, CompoundUnit)\
+                        and unit.numerator.dimensions == unit.denominator.dimensions:
+                    return unit
+
+            exponents = Unit.__exponents_of_units_of_same_dimensions(unit)
+            result = Unit.__create_unit_from_exponents(exponents)
+            result.identifier = unit.identifier
+            return result
+        return unit
+
+    @staticmethod
+    def __exponents_of_units_of_same_dimensions(unit):
+        # takes together the exponents of units that have the same dimensions.
+        # So if you have kg.g this will result in exponent 2 for kg.
+        reduced = []
+        if isinstance(unit, CompoundUnit):
+            bue = unit.get_units_exponents()
+            for exp in bue:
+                found = False
+                for red in reduced:
+                    if exp[0].dimensions == red[0].dimensions:
+                        red[1] = red[1]+exp[1]
+                        found = True
+                if not found:
+                    reduced.append([exp[0], exp[1]])
+            return reduced
+        reduced.append([unit, 1.0])
+        return reduced
+
+    @staticmethod
+    def __create_unit_from_exponents(exponents):
+        numerator = None
+        denominator = None
+        units_in_numerator = 0
+        units_in_denominator = 0
+        for red in exponents:
+            if red[1] > 0:
+                units_in_numerator += 1
+            if red[1] < 0:
+                units_in_denominator += 1
+        for red in exponents:
+            if red[1] > 0:
+                unit_exp = red[0]
+                if units_in_numerator <= 1 or str(
+                        unit_exp.identifier) != "http://www.ontology-of-units-of-measure.org/resource/om-2/one":
+                    if red[1] > 1:
+                        unit_exp = UnitExponentiation(red[0], red[1])
+                    if numerator is None:
+                        numerator = unit_exp
+                    else:
+                        numerator = UnitMultiplication(numerator, unit_exp)
+            if red[1] < 0:
+                unit_exp = red[0]
+                if unit_exp.identifier != str("http://www.ontology-of-units-of-measure.org/resource/om-2/one"):
+                    if red[1] < -1:
+                        unit_exp = UnitExponentiation(red[0], -red[1])
+                    if denominator is None:
+                        denominator = unit_exp
+                    else:
+                        denominator = UnitMultiplication(denominator, unit_exp)
+        if numerator is None:
+            numerator = Unit.get_singular_unit('one', '', Dimension())
+        if denominator is None:
+            result = numerator
+        else:
+            result = UnitDivision(numerator, denominator)
+        return result
+
+
+    @staticmethod
+    def reduce_unit(unit):
+        result = unit
+        if isinstance(unit, CompoundUnit):
+            reduced = []
+            bue = unit.get_units_exponents()
+            for exponent in bue:
+                found = False
+                for red in reduced:
+                    if exponent[0] == red[0]:
+                        found = True
+                        red[1] = red[1] + exponent[1]
+                if not found:
+                    reduced.append(exponent)
+            reduced.sort(key=Unit.cmp_to_key(Unit.__exponents_cmp))
+            if isinstance(unit, UnitDivision) \
+                    and not isinstance(unit.numerator, CompoundUnit) \
+                    and not isinstance(unit.denominator, CompoundUnit) \
+                    and unit.numerator.dimensions == unit.denominator.dimensions:
+                return unit
+            result = Unit.__create_unit_from_exponents(reduced)
+            result.identifier = unit.identifier
+        return result
+
+    @staticmethod
+    def __exponents_cmp(a, b):
+        if a[1] > 0 and b[1] < 0:
+            return -1
+        if a[1] < 0 and b[1] > 0:
+            return 1
+        if a[1] > 0 and b[1] < a[1]:
+            return 1
+        if 0 < a[1] < b[1]:
+            return -1
+        if 0 > a[1] > b[1]:
+            return -1
+        if a[1] < 0 and b[1] > a[1]:
+            return 1
+        return 0
+
+    @staticmethod
+    def cmp_to_key(mycmp):
+        'Convert a cmp= function into a key= function'
+
+        class K:
+            def __init__(self, obj, *args):
+                self.obj = obj
+
+            def __lt__(self, other):
+                return mycmp(self.obj, other.obj) < 0
+
+            def __gt__(self, other):
+                return mycmp(self.obj, other.obj) > 0
+
+            def __eq__(self, other):
+                return mycmp(self.obj, other.obj) == 0
+
+            def __le__(self, other):
+                return mycmp(self.obj, other.obj) <= 0
+
+            def __ge__(self, other):
+                return mycmp(self.obj, other.obj) >= 0
+
+            def __ne__(self, other):
+                return mycmp(self.obj, other.obj) != 0
+
+        return K
+
+    @staticmethod
     def conversion_factor(from_unit, to_unit):
         can_convert = Unit.can_convert(from_unit, to_unit)
         if not can_convert:
@@ -148,7 +290,7 @@ class Unit(SymbolThing):
         to_norm = Unit.__normalise_base_units_exponents(to_base_units_exponents)
         if not Unit.__check_same_units_from_normalised(from_norm, to_norm):
             raise UnitConversionException("Cannot convert from {} to {} as they do not have a common ancestor unit."
-                                            .format(from_unit, to_unit))
+                                          .format(from_unit, to_unit))
         from_factor = Unit.__factor_from_normalised(from_norm)
         to_factor = Unit.__factor_from_normalised(to_norm)
         factor = from_factor / to_factor
@@ -226,7 +368,7 @@ class Unit(SymbolThing):
                     raise UnitIdentityException("The identifier for a SingularUnit has been used earlier"
                                                 " for another type of unit")
                 else:
-                    if base_unit is not None:
+                    if base_unit is not None and base_unit != test_unit.baseUnit:
                         base_identifier = str(base_unit.identifier)
                         test_identifier = str(test_unit.baseUnit.identifier)
                         if base_identifier != test_identifier:
@@ -306,7 +448,7 @@ class Unit(SymbolThing):
         return unit
 
     @staticmethod
-    def get_unit_multiplication(multiplier, multiplicand, symbol=None, identifier=None, cache=True,
+    def get_unit_multiplication(multiplier, multiplicand, identifier=None, cache=True,
                                 system_of_units=None):
         if identifier is not None:
             for test_unit in Unit._units:
@@ -327,8 +469,6 @@ class Unit(SymbolThing):
         if unit is not None:
             if identifier is not None:
                 unit.identifier = identifier
-            if symbol is not None:
-                unit.add_symbol(symbol)
             if system_of_units is not None:
                 unit.systemOfUnits = system_of_units
         if unit is None:
@@ -342,13 +482,14 @@ class Unit(SymbolThing):
             if system_of_units is None and multiplier.systemOfUnits is not None and \
                     multiplicand.systemOfUnits is not None and multiplicand.systemOfUnits == multiplier.systemOfUnits:
                 system_of_units = multiplier.systemOfUnits
-            unit = UnitMultiplication(multiplier, multiplicand, symbol, identifier, system_of_units)
+            unit = UnitMultiplication(multiplier, multiplicand, identifier, system_of_units)
+            unit = Unit.reduce_unit(unit)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit
 
     @staticmethod
-    def get_unit_division(numerator, denominator, symbol=None, identifier=None, cache=True, system_of_units=None):
+    def get_unit_division(numerator, denominator, identifier=None, cache=True, system_of_units=None):
         if identifier is not None:
             for test_unit in Unit._units:
                 if str(test_unit.identifier) == str(identifier):
@@ -368,8 +509,6 @@ class Unit(SymbolThing):
         if unit is not None:
             if identifier is not None:
                 unit.identifier = identifier
-            if symbol is not None:
-                unit.add_symbol(symbol)
             if system_of_units is not None:
                 unit.systemOfUnits = system_of_units
         if unit is None:
@@ -383,13 +522,14 @@ class Unit(SymbolThing):
             if system_of_units is None and denominator.systemOfUnits is not None and \
                     numerator.systemOfUnits is not None and numerator.systemOfUnits == denominator.systemOfUnits:
                 system_of_units = numerator.systemOfUnits
-            unit = UnitDivision(numerator, denominator, symbol, identifier, system_of_units)
+            unit = UnitDivision(numerator, denominator, identifier, system_of_units)
+            unit = Unit.reduce_unit(unit)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit
 
     @staticmethod
-    def get_unit_exponentiation(base, exponent, symbol=None, identifier=None, cache=True, system_of_units=None):
+    def get_unit_exponentiation(base, exponent, identifier=None, cache=True, system_of_units=None):
         unit = None
         if identifier is not None:
             for test_unit in Unit._units:
@@ -411,8 +551,6 @@ class Unit(SymbolThing):
         if unit is not None:
             if identifier is not None:
                 unit.identifier = identifier
-            if symbol is not None:
-                unit.add_symbol(symbol)
             if system_of_units is not None:
                 unit.systemOfUnits = system_of_units
         if unit is None:
@@ -425,7 +563,8 @@ class Unit(SymbolThing):
                         return unit
             if system_of_units is None and base.systemOfUnits is not None:
                 system_of_units = base.systemOfUnits
-            unit = UnitExponentiation(base, exponent, symbol, identifier, system_of_units)
+            unit = UnitExponentiation(base, exponent, identifier, system_of_units)
+            unit = Unit.reduce_unit(unit)
             if cache:
                 unit = Unit.__add_when_not_duplicate(unit)
         return unit
@@ -472,6 +611,8 @@ class SingularUnit(Unit):
                  system_of_units=None, is_base_unit=False):
         if base_unit is not None:
             dimensions = base_unit.dimensions
+        if system_of_units is None and not is_base_unit and base_unit is not None:
+            system_of_units = base_unit.systemOfUnits
         super().__init__(label, symbol, dimensions, identifier, system_of_units=system_of_units,
                          is_base_unit=is_base_unit)
         self.factor = factor
@@ -490,6 +631,9 @@ class SingularUnit(Unit):
                 return str(self.identifier) == str(other.identifier)
         return False
 
+    def get_units_exponents(self):
+        return [[self, 1, 1.0]]
+
     def get_base_units_exponents(self):
         if self.baseUnit is None:
             return [[self, 1, 1.0]]
@@ -498,7 +642,7 @@ class SingularUnit(Unit):
         factor_added = False
         for exponents in base_base:
             if not factor_added:
-                corrected_factor = pow(self.factor, 1/(exponents[1]))
+                corrected_factor = pow(self.factor, 1 / (exponents[1]))
                 converted = [exponents[0], exponents[1], exponents[2] * corrected_factor]
                 factor_added = True
             else:
@@ -526,11 +670,20 @@ class PrefixedUnit(Unit):
                 return str(self.identifier) == str(other.identifier)
         return False
 
+    def get_units_exponents(self):
+        return [[self, 1, 1.0]]
+
     def get_base_units_exponents(self):
         base_base = self.baseUnit.get_base_units_exponents()
         result = []
+        factor_added = False
         for exponents in base_base:
-            converted = [exponents[0], exponents[1], exponents[2] * self.prefix.factor]
+            if not factor_added:
+                corrected_factor = pow(self.prefix.factor, 1 / (exponents[1]))
+                converted = [exponents[0], exponents[1], exponents[2] * corrected_factor]
+                factor_added = True
+            else:
+                converted = exponents
             result.append(converted)
         return result
 
@@ -556,17 +709,16 @@ class CompoundUnit(Unit):
 
 class UnitMultiplication(CompoundUnit):
 
-    def __init__(self, multiplier, multiplicand, symbol=None, identifier=None, system_of_units=None,
+    def __init__(self, multiplier, multiplicand, identifier=None, system_of_units=None,
                  is_base_unit=False):
         dimensions = multiplier.dimensions * multiplicand.dimensions
-        if symbol is None:
-            multiplier_str = str(multiplier.symbol())
-            if isinstance(multiplier, CompoundUnit):
-                multiplier_str = f'({multiplier_str})'
-            multiplicand_str = str(multiplicand.symbol())
-            if isinstance(multiplicand, CompoundUnit):
-                multiplicand_str = f'({multiplicand_str})'
-            symbol = f'{multiplier_str}.{multiplicand_str}'
+        multiplier_str = str(multiplier.symbol())
+        if isinstance(multiplier, CompoundUnit) and not isinstance(multiplier, UnitExponentiation):
+            multiplier_str = f'{multiplier_str}'
+        multiplicand_str = str(multiplicand.symbol())
+        if isinstance(multiplicand, CompoundUnit) and not isinstance(multiplicand, UnitExponentiation):
+            multiplicand_str = f'{multiplicand_str}'
+        symbol = f'{multiplier_str}.{multiplicand_str}'
         super().__init__(symbol, dimensions, identifier, system_of_units=system_of_units, is_base_unit=is_base_unit)
         self.multiplier = multiplier
         self.multiplicand = multiplicand
@@ -582,6 +734,14 @@ class UnitMultiplication(CompoundUnit):
                 return str(self.identifier) == str(other.identifier)
         return False
 
+    def get_units_exponents(self):
+        multiplier_exp = self.multiplier.get_units_exponents()
+        multiplicand_exp = self.multiplicand.get_units_exponents()
+        result = []
+        result.extend(multiplier_exp)
+        result.extend(multiplicand_exp)
+        return result
+
     def get_base_units_exponents(self):
         multiplier_base = self.multiplier.get_base_units_exponents()
         multiplicand_base = self.multiplicand.get_base_units_exponents()
@@ -593,16 +753,15 @@ class UnitMultiplication(CompoundUnit):
 
 class UnitDivision(CompoundUnit):
 
-    def __init__(self, numerator, denominator, symbol=None, identifier=None, system_of_units=None, is_base_unit=False):
+    def __init__(self, numerator, denominator, identifier=None, system_of_units=None, is_base_unit=False):
         dimensions = numerator.dimensions / denominator.dimensions
-        if symbol is None:
-            numerator_str = str(numerator.symbol())
-            if isinstance(numerator, CompoundUnit):
-                numerator_str = f'({numerator_str})'
-            denominator_str = str(denominator.symbol())
-            if isinstance(denominator, CompoundUnit):
-                denominator_str = f'({denominator_str})'
-            symbol = f'{numerator_str}/{denominator_str}'
+        numerator_str = str(numerator.symbol())
+        if isinstance(numerator, CompoundUnit) and not isinstance(numerator, UnitExponentiation):
+            numerator_str = f'({numerator_str})'
+        denominator_str = str(denominator.symbol())
+        if isinstance(denominator, CompoundUnit) and not isinstance(denominator, UnitExponentiation):
+            denominator_str = f'({denominator_str})'
+        symbol = f'{numerator_str}/{denominator_str}'
         super().__init__(symbol, dimensions, identifier, system_of_units=system_of_units, is_base_unit=is_base_unit)
         self.numerator = numerator
         self.denominator = denominator
@@ -616,6 +775,15 @@ class UnitDivision(CompoundUnit):
                 return str(self.identifier) == str(other.identifier)
         return False
 
+    def get_units_exponents(self):
+        numerator_exp = self.numerator.get_units_exponents()
+        denominator_exp = self.denominator.get_units_exponents()
+        result = []
+        result.extend(numerator_exp)
+        for exponents in denominator_exp:
+            result.append([exponents[0], -exponents[1], exponents[2]])
+        return result
+
     def get_base_units_exponents(self):
         numerator_base = self.numerator.get_base_units_exponents()
         denominator_base = self.denominator.get_base_units_exponents()
@@ -628,13 +796,12 @@ class UnitDivision(CompoundUnit):
 
 class UnitExponentiation(CompoundUnit):
 
-    def __init__(self, base, exponent, symbol=None, identifier=None, system_of_units=None, is_base_unit=False):
+    def __init__(self, base, exponent, identifier=None, system_of_units=None, is_base_unit=False):
         dimensions = Dimension.pow(base.dimensions, exponent)
-        if symbol is None:
-            base_str = str(base.symbol())
-            if isinstance(base, CompoundUnit):
-                base_str = f'({base_str})'
-            symbol = f'{base_str}{exponent}'
+        base_str = str(base.symbol())
+        if isinstance(base, CompoundUnit):
+            base_str = f'({base_str})'
+        symbol = f'{base_str}{exponent}'
         super().__init__(symbol, dimensions, identifier, system_of_units=system_of_units, is_base_unit=is_base_unit)
         self.base = base
         self.exponent = exponent
@@ -647,6 +814,13 @@ class UnitExponentiation(CompoundUnit):
             else:
                 return str(self.identifier) == str(other.identifier)
         return False
+
+    def get_units_exponents(self):
+        base_exp = self.base.get_units_exponents()
+        result = []
+        for exponents in base_exp:
+            result.append([exponents[0], exponents[1] * self.exponent, exponents[2]])
+        return result
 
     def get_base_units_exponents(self):
         base_base = self.base.get_base_units_exponents()

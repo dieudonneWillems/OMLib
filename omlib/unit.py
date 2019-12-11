@@ -136,6 +136,79 @@ class Unit(SymbolThing):
             Unit._units.append(unit)
         return result_unit
 
+    @staticmethod
+    def simplified_compound_unit(unit):
+        # creates a simplified unit (e.g. kg.mg/g becomes kg), conversion to this unit is however needed afterwards.
+        if isinstance(unit, CompoundUnit):
+            if isinstance(unit, UnitDivision):
+                if not isinstance(unit.numerator, CompoundUnit) and not isinstance(unit.denominator, CompoundUnit)\
+                        and unit.numerator.dimensions == unit.denominator.dimensions:
+                    return unit
+
+            exponents = Unit.__exponents_of_units_of_same_dimensions(unit)
+            result = Unit.__create_unit_from_exponents(exponents)
+            result.identifier = unit.identifier
+            return result
+        return unit
+
+    @staticmethod
+    def __exponents_of_units_of_same_dimensions(unit):
+        # takes together the exponents of units that have the same dimensions.
+        # So if you have kg.g this will result in exponent 2 for kg.
+        reduced = []
+        if isinstance(unit, CompoundUnit):
+            bue = unit.get_units_exponents()
+            for exp in bue:
+                found = False
+                for red in reduced:
+                    if exp[0].dimensions == red[0].dimensions:
+                        red[1] = red[1]+exp[1]
+                        found = True
+                if not found:
+                    reduced.append([exp[0], exp[1]])
+            return reduced
+        reduced.append([unit, 1.0])
+        return reduced
+
+    @staticmethod
+    def __create_unit_from_exponents(exponents):
+        numerator = None
+        denominator = None
+        units_in_numerator = 0
+        units_in_denominator = 0
+        for red in exponents:
+            if red[1] > 0:
+                units_in_numerator += 1
+            if red[1] < 0:
+                units_in_denominator += 1
+        for red in exponents:
+            if red[1] > 0:
+                unit_exp = red[0]
+                if units_in_numerator <= 1 or str(
+                        unit_exp.identifier) != "http://www.ontology-of-units-of-measure.org/resource/om-2/one":
+                    if red[1] > 1:
+                        unit_exp = UnitExponentiation(red[0], red[1])
+                    if numerator is None:
+                        numerator = unit_exp
+                    else:
+                        numerator = UnitMultiplication(numerator, unit_exp)
+            if red[1] < 0:
+                unit_exp = red[0]
+                if unit_exp.identifier != str("http://www.ontology-of-units-of-measure.org/resource/om-2/one"):
+                    if red[1] < -1:
+                        unit_exp = UnitExponentiation(red[0], -red[1])
+                    if denominator is None:
+                        denominator = unit_exp
+                    else:
+                        denominator = UnitMultiplication(denominator, unit_exp)
+        if numerator is None:
+            numerator = Unit.get_singular_unit('one', '', Dimension())
+        if denominator is None:
+            result = numerator
+        else:
+            result = UnitDivision(numerator, denominator)
+        return result
+
 
     @staticmethod
     def reduce_unit(unit):
@@ -152,45 +225,12 @@ class Unit(SymbolThing):
                 if not found:
                     reduced.append(exponent)
             reduced.sort(key=Unit.cmp_to_key(Unit.__exponents_cmp))
-            numerator = None
-            denominator = None
-            units_in_numerator = 0
-            units_in_denominator = 0
             if isinstance(unit, UnitDivision) \
                     and not isinstance(unit.numerator, CompoundUnit) \
                     and not isinstance(unit.denominator, CompoundUnit) \
                     and unit.numerator.dimensions == unit.denominator.dimensions:
                 return unit
-            for red in reduced:
-                if red[1] > 0:
-                    units_in_numerator += 1
-                if red[1] < 0:
-                    units_in_denominator += 1
-            for red in reduced:
-                if red[1] > 0:
-                    unit_exp = red[0]
-                    if units_in_numerator <= 1 or str(unit_exp.identifier) != "http://www.ontology-of-units-of-measure.org/resource/om-2/one":
-                        if red[1] > 1:
-                            unit_exp = UnitExponentiation(red[0], red[1])
-                        if numerator is None:
-                            numerator = unit_exp
-                        else:
-                            numerator = UnitMultiplication(numerator, unit_exp)
-                if red[1] < 0:
-                    unit_exp = red[0]
-                    if unit_exp.identifier != str("http://www.ontology-of-units-of-measure.org/resource/om-2/one"):
-                        if red[1] < -1:
-                            unit_exp = UnitExponentiation(red[0], -red[1])
-                        if denominator is None:
-                            denominator = unit_exp
-                        else:
-                            denominator = UnitMultiplication(denominator, unit_exp)
-            if numerator is None:
-                numerator = Unit.get_singular_unit('one', '', Dimension())
-            if denominator is None:
-                result = numerator
-            else:
-                result = UnitDivision(numerator, denominator)
+            result = Unit.__create_unit_from_exponents(reduced)
             result.identifier = unit.identifier
         return result
 
@@ -213,6 +253,7 @@ class Unit(SymbolThing):
     @staticmethod
     def cmp_to_key(mycmp):
         'Convert a cmp= function into a key= function'
+
         class K:
             def __init__(self, obj, *args):
                 self.obj = obj
@@ -249,7 +290,7 @@ class Unit(SymbolThing):
         to_norm = Unit.__normalise_base_units_exponents(to_base_units_exponents)
         if not Unit.__check_same_units_from_normalised(from_norm, to_norm):
             raise UnitConversionException("Cannot convert from {} to {} as they do not have a common ancestor unit."
-                                            .format(from_unit, to_unit))
+                                          .format(from_unit, to_unit))
         from_factor = Unit.__factor_from_normalised(from_norm)
         to_factor = Unit.__factor_from_normalised(to_norm)
         factor = from_factor / to_factor
@@ -601,7 +642,7 @@ class SingularUnit(Unit):
         factor_added = False
         for exponents in base_base:
             if not factor_added:
-                corrected_factor = pow(self.factor, 1/(exponents[1]))
+                corrected_factor = pow(self.factor, 1 / (exponents[1]))
                 converted = [exponents[0], exponents[1], exponents[2] * corrected_factor]
                 factor_added = True
             else:
@@ -638,7 +679,7 @@ class PrefixedUnit(Unit):
         factor_added = False
         for exponents in base_base:
             if not factor_added:
-                corrected_factor = pow(self.prefix.factor, 1/(exponents[1]))
+                corrected_factor = pow(self.prefix.factor, 1 / (exponents[1]))
                 converted = [exponents[0], exponents[1], exponents[2] * corrected_factor]
                 factor_added = True
             else:

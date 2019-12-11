@@ -87,6 +87,7 @@ class TestUnits(unittest.TestCase):
         t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
         s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
+        Unit.get_unit_multiplication(m, s, identifier=OM.NAMESPACE + 'metreSecond')
         value_1 = Measure(2, m)
         value_2 = Measure(50, s)
         result_value_1 = value_1 * value_2
@@ -99,7 +100,6 @@ class TestUnits(unittest.TestCase):
         self.assertTrue(isinstance(result_value_2.unit, UnitMultiplication))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_2.unit.multiplicand.identifier))
         self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_2.unit.multiplier.identifier))
-        Unit.get_unit_multiplication(m, s, identifier=OM.NAMESPACE + 'metreSecond')
         self.assertEqual(str(OM.NAMESPACE + 'metreSecond'), str(result_value_1.unit.identifier))
 
     def test_divide_measures(self):
@@ -516,5 +516,5 @@ class TestUnits(unittest.TestCase):
         self.assertEqual("mg/g", str(m1.unit.symbol()))
         m2 = om(34, SI.KILOGRAM)
         m3 = m2 * m1
-        self.assertEqual("(kg.mg)/g", str(m3.unit.symbol()))
-        self.assertAlmostEqual(340, m3.numericalValue, delta=0.0001)
+        self.assertEqual("kg", str(m3.unit.symbol()))
+        self.assertAlmostEqual(0.340, m3.numericalValue, delta=0.0001)

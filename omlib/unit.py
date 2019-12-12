@@ -387,6 +387,10 @@ class Unit(SymbolThing):
     @staticmethod
     def get_prefixed_unit(prefix, base_unit, identifier=None, cache=True, system_of_units=None, is_base_unit=False):
         unit = None
+        if isinstance(prefix, str):
+            prefix = Prefix.with_identifier(prefix)
+        if isinstance(prefix, URIRef):
+            prefix = Prefix.with_identifier(prefix.value)
         if identifier is not None:
             test_unit = Unit.with_identifier(identifier)
             if test_unit is not None:
@@ -590,11 +594,21 @@ class Unit(SymbolThing):
 
 class Prefix(object):
 
+    _prefixes = dict()
+
+    @staticmethod
+    def with_identifier(identifier):
+        identifier_string = str(identifier)
+        if identifier_string in Prefix._prefixes:
+            return Prefix._prefixes(identifier_string)
+        return None
+
     def __init__(self, name, symbol, factor, identifier):
         self.name = name
         self.symbol = symbol
         self.factor = factor
         self.identifier = identifier
+        Prefix._prefixes[str(identifier)] = self
 
     def __eq__(self, other):
         if isinstance(other, Prefix):
@@ -718,7 +732,7 @@ class UnitMultiplication(CompoundUnit):
         multiplicand_str = str(multiplicand.symbol())
         if isinstance(multiplicand, CompoundUnit) and not isinstance(multiplicand, UnitExponentiation):
             multiplicand_str = f'{multiplicand_str}'
-        symbol = f'{multiplier_str}.{multiplicand_str}'
+        symbol = f'{multiplier_str}·{multiplicand_str}'
         super().__init__(symbol, dimensions, identifier, system_of_units=system_of_units, is_base_unit=is_base_unit)
         self.multiplier = multiplier
         self.multiplicand = multiplicand

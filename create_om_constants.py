@@ -1,6 +1,7 @@
 import os
+from datetime import datetime
 
-from rdflib import Graph, URIRef
+from rdflib import Graph, URIRef, Literal
 
 from omlib.constants import OM_IDS
 
@@ -42,6 +43,7 @@ def define_units(om_graph):
         SELECT * WHERE {
             ?instance a ?class.
             ?class rdfs:subClassOf* om:Unit.
+            ?class rdfs:subClassOf* ?superClass.
             OPTIONAL { ?instance rdfs:label ?label. }
             OPTIONAL { ?instance om:alternativeLabel ?altLabel. }
             OPTIONAL { ?instance om:symbol ?symbol. }
@@ -75,6 +77,7 @@ def define_units(om_graph):
         else:
             unit_dict = dict()
         unit_dict = __add_property_to_dict(unit_dict, "class", row['class'])
+        unit_dict = __add_property_to_dict(unit_dict, "class", row['superClass'])
         unit_dict = __add_property_to_dict(unit_dict, "label", row.label)
         unit_dict = __add_property_to_dict(unit_dict, "altLabel", row.altLabel)
         unit_dict = __add_property_to_dict(unit_dict, "symbol", row.symbol)
@@ -122,6 +125,22 @@ def __determine_order(all_units_dict):
                 multiplier = unit_dict['multiplier']
                 if multiplier not in order:
                     all_parents = False
+            if 'multiplicand' in unit_dict:
+                multiplicand = unit_dict['multiplicand']
+                if multiplicand not in order:
+                    all_parents = False
+            if 'numerator' in unit_dict:
+                numerator = unit_dict['numerator']
+                if numerator not in order:
+                    all_parents = False
+            if 'denominator' in unit_dict:
+                denominator = unit_dict['denominator']
+                if denominator not in order:
+                    all_parents = False
+            if 'exponentBase' in unit_dict:
+                exponent_base = unit_dict['exponentBase']
+                if exponent_base not in order:
+                    all_parents = False
             if ident_str == gram:
                 all_parents = True
             if all_parents:
@@ -152,27 +171,48 @@ def __remove_quotes(object):
     if isinstance(object, list):
         result = "["
         for item in object:
-            string = None
-            if isinstance(item, URIRef):
-                string = item.value
+            string = "" + str(item)
+            string = string.replace("'", "\\'")
+            string = string.replace('"', '\\"')
+            if isinstance(item, Literal):
+                string = "Literal('" + string + "'"
+                if item.language is not None:
+                    string = string + ", lang='" + item.language + "')"
+                else:
+                    string = string + ")"
             else:
-                string = str(item)
-            string = str.replace("'", "\\'")
-            string = str.replace('"', '\\"')
+                string = "Literal('" + string + "')"
             if len(result) > 1:
                 result += ', '
-            result += "'" + string + "'"
+            result += string
         result += "]"
     else:
-        string = None
-        if isinstance(object, URIRef):
-            string = object.value
+        string = str(object)
+        string = string.replace("'", "\\'")
+        string = string.replace('"', '\\"')
+        if isinstance(object, Literal):
+            string = "Literal('" + string + "'"
+            if object.language is not None:
+                string = string + ", lang='" + object.language + "')"
+            else:
+                string = string + ")"
         else:
             string = str(object)
-            string = str.replace("'", "\\'")
-            string = str.replace('"', '\\"')
-        result = "'" + string + "'"
+            print(string)
+            string = string.replace("'", "\\'")
+            print(string)
+            string = string.replace('"', '\\"')
+            print(string)
+            string = "Literal(" + string + ")"
+            print(string)
+        result = string
     return result
+
+
+def __get_python_name(identifier):
+    py_name = os.path.basename(os.path.normpath(identifier))
+    py_name = py_name.replace('-', '')
+    return py_name
 
 
 def create_singular_unit_in_file(identifier, unit_dict, file_contents):
@@ -182,34 +222,124 @@ def create_singular_unit_in_file(identifier, unit_dict, file_contents):
     symbol = None
     if 'symbol' in unit_dict:
         symbol = unit_dict['symbol']
-    if label is not None and not isinstance(label, list):
-        label = "'" + label + "'"
-    if symbol is not None and not isinstance(symbol, list):
-        symbol = "'" + symbol + "'"
-    py_name = os.path.basename(os.path.normpath(identifier))
-    py_name = py_name.replace('-', '')
+    py_name = __get_python_name(identifier)
     label = __remove_quotes(label)
     symbol = __remove_quotes(symbol)
-    if 'baseUnit' in unit_dict:
+    if 'baseUnit' in unit_dict and not str(identifier) == str(OM_IDS.NAMESPACE + 'gram'):
         base_unit = unit_dict['baseUnit']
+        base_py_name = __get_python_name(base_unit)
         factor = 1.0
         if 'factor' in unit_dict:
             factor = unit_dict['factor'].value
         else:
             pass
-        line = "    {} = Unit.get_singular_unit({}, {}, base_unit='{}', factor={}, identifier='{}')\n".format(py_name,
+        line = "    {} = Unit.get_singular_unit({}, {}, base_unit={}, factor={}, identifier='{}')\n".format(py_name,
                                                                                                               label,
                                                                                                               symbol,
-                                                                                                              base_unit,
+                                                                                                              base_py_name,
                                                                                                               factor,
                                                                                                               identifier)
         file_contents = file_contents + line
     else:
-        pass
+        dimension = "Dimension("
+        if 'timeDimExp' in unit_dict:
+            dimension += "" + str(unit_dict['timeDimExp'].value) + ", "
+        else:
+            dimension += "0, "
+        if 'lengthDimExp' in unit_dict:
+            dimension += "" + str(unit_dict['lengthDimExp'].value) + ", "
+        else:
+            dimension += "0, "
+        if 'massDimExp' in unit_dict:
+            dimension += "" + str(unit_dict['massDimExp'].value) + ", "
+        else:
+            dimension += "0, "
+        if 'electricCurrentDimExp' in unit_dict:
+            dimension += "" + str(unit_dict['electricCurrentDimExp'].value) + ", "
+        else:
+            dimension += "0, "
+        if 'thermodynamicTemperatureDimExp' in unit_dict:
+            dimension += "" + str(unit_dict['thermodynamicTemperatureDimExp'].value) + ", "
+        else:
+            dimension += "0, "
+        if 'amountOfSubstanceDimExp' in unit_dict:
+            dimension += "" + str(unit_dict['amountOfSubstanceDimExp'].value) + ", "
+        else:
+            dimension += "0, "
+        if 'luminousIntensityDimExp' in unit_dict:
+            dimension += "" + str(unit_dict['luminousIntensityDimExp'].value)
+        else:
+            dimension += "0"
+        dimension += ")"
+        line = "    {} = Unit.get_singular_unit({}, {}, {}, identifier='{}')\n".format(py_name, label, symbol, dimension,  identifier)
+        file_contents = file_contents + line
     return file_contents
 
 
 def create_prefixed_unit_in_file(identifier, unit_dict, file_contents):
+    if 'prefix' in unit_dict:
+        prefix = unit_dict['prefix']
+        if isinstance(prefix, URIRef):
+            prefix = str(prefix)
+        py_name = __get_python_name(identifier)
+        base_unit = unit_dict['baseUnit']
+        base_py_name = __get_python_name(base_unit)
+        line = "    {} = Unit.get_prefixed_unit('{}', base_unit={}, identifier='{}')\n".format(py_name, prefix, base_py_name, identifier)
+        file_contents = file_contents + line
+    return file_contents
+
+
+def create_unit_multiple_in_file(identifier, unit_dict, file_contents):
+    py_name = __get_python_name(identifier)
+    base_unit = unit_dict['baseUnit']
+    base_py_name = __get_python_name(base_unit)
+    label = None
+    if 'label' in unit_dict:
+        label = unit_dict['label']
+    symbol = None
+    if 'symbol' in unit_dict:
+        symbol = unit_dict['symbol']
+    label = __remove_quotes(label)
+    symbol = __remove_quotes(symbol)
+    factor = 1.0
+    if 'factor' in unit_dict:
+        factor = unit_dict['factor'].value
+    else:
+        pass
+    line = "    {} = Unit.get_unit_multiple({}, factor={}, identifier='{}', label={}, symbol={})\n".format(py_name, base_py_name, factor, identifier, label, symbol)
+    file_contents = file_contents + line
+    return file_contents
+
+
+def create_unit_multiplication_in_file(identifier, unit_dict, file_contents):
+    py_name = __get_python_name(identifier)
+    multiplier = unit_dict['multiplier']
+    multiplier_py_name = __get_python_name(multiplier)
+    multiplicand = unit_dict['multiplicand']
+    multiplicand_py_name = __get_python_name(multiplicand)
+    line = "    {} = Unit.get_unit_multiplication({}, {}, identifier='{}')\n".format(py_name, multiplier_py_name, multiplicand_py_name, identifier)
+    file_contents = file_contents + line
+    return file_contents
+
+
+def create_unit_division_in_file(identifier, unit_dict, file_contents):
+    py_name = __get_python_name(identifier)
+    numerator = unit_dict['numerator']
+    numerator_py_name = __get_python_name(numerator)
+    denominator = unit_dict['denominator']
+    denominator_py_name = __get_python_name(denominator)
+    line = "    {} = Unit.get_unit_division({}, {}, identifier='{}')\n".format(py_name, numerator_py_name, denominator_py_name, identifier)
+    file_contents = file_contents + line
+    return file_contents
+
+
+def create_unit_exponentiation_in_file(identifier, unit_dict, file_contents):
+    py_name = __get_python_name(identifier)
+    base_unit = unit_dict['exponentBase']
+    base_unit_py_name = __get_python_name(base_unit)
+    exponent = unit_dict['exponent'].value
+    line = "    {} = Unit.get_unit_exponentiation({}, {}, identifier='{}')\n".format(py_name, base_unit_py_name, exponent, identifier)
+    file_contents = file_contents + line
     return file_contents
 
 
@@ -228,28 +358,30 @@ def create_all_units_in_file(all_units_dict, file_contents):
             file_contents = create_prefixed_unit_in_file(ident, unit_dict, file_contents)
         else:
             if unit_multiple in unit_classes:
-                file_contents = create_prefixed_unit_in_file(ident, unit_dict, file_contents)
+                file_contents = create_unit_multiple_in_file(ident, unit_dict, file_contents)
             else:
                 if unit_multiplication in unit_classes:
-                    file_contents = create_prefixed_unit_in_file(ident, unit_dict, file_contents)
+                    file_contents = create_unit_multiplication_in_file(ident, unit_dict, file_contents)
                 else:
                     if unit_division in unit_classes:
-                        file_contents = create_prefixed_unit_in_file(ident, unit_dict, file_contents)
+                        file_contents = create_unit_division_in_file(ident, unit_dict, file_contents)
                     else:
                         if unit_exponentiation in unit_classes:
-                            file_contents = create_prefixed_unit_in_file(ident, unit_dict, file_contents)
+                            file_contents = create_unit_exponentiation_in_file(ident, unit_dict, file_contents)
                         else:
                             file_contents = create_singular_unit_in_file(ident, unit_dict, file_contents)
     return file_contents
 
 
 if __name__ == '__main__':
+    now = datetime.now() # current date and time
+    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     graph = load_OM()
     all_units_dict = define_units(graph)
     file_contents = """
 import rdflib
 from omlib.constants import OM_IDS
-from rdflib import URIRef
+from rdflib import URIRef, Literal
 from omlib.dimension import Dimension
 from omlib.scale import Scale
 from omlib.unit import Prefix, Unit
@@ -258,6 +390,7 @@ class OM:
     NAMESPACE = OM_IDS.NAMESPACE
     
 """
+    file_contents = "# This file was automatically generated on " + date_time + ".\n" + file_contents
     file_contents = create_all_units_in_file(all_units_dict, file_contents)
     print(file_contents)
     app_path = os.path.dirname(os.path.abspath(__file__))

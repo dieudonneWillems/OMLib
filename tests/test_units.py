@@ -2,8 +2,9 @@ import unittest
 
 from omlib.exceptions.dimensionexception import DimensionalException
 from omlib.exceptions.unitconversionexception import UnitConversionException
-from omlib.constants import OM, SI, IMPERIAL
+from omlib.constants import SI, IMPERIAL
 from omlib.dimension import Dimension
+from omlib.omconstants import OM
 from omlib.unit import UnitDivision, UnitExponentiation, \
     Unit
 
@@ -54,7 +55,7 @@ class TestUnits(unittest.TestCase):
         ms = Unit.get_unit_multiplication(m, s)
         ms_dim = Dimension(1, 1, 0, 0, 0, 0, 0)
         self.assertTrue(ms.label() is None)
-        self.assertEqual('m.s', ms.symbol().value)
+        self.assertEqual('m·s', ms.symbol().value)
         self.assertEqual(ms_dim, ms.dimensions)
 
     def test__unit_exponentiation(self):
@@ -413,17 +414,17 @@ class TestUnits(unittest.TestCase):
         m_s2 = Unit.get_unit_division(m_s, SI.SECOND)
         self.assertEqual('m/s2', str(m_s2.symbol()))
         kgm_s2 = Unit.get_unit_multiplication(SI.KILOGRAM, m_s2)
-        self.assertEqual('(kg.m)/s2', str(kgm_s2.symbol()))
+        self.assertEqual('(kg·m)/s2', str(kgm_s2.symbol()))
         m2 = Unit.get_unit_exponentiation(SI.METRE, 2)
         kg_ms2 = Unit.get_unit_division(kgm_s2, m2)
-        self.assertEqual('kg/(m.s2)', str(kg_ms2.symbol()))
+        self.assertEqual('kg/(m·s2)', str(kg_ms2.symbol()))
 
     def test_unit_simplification_2(self):
         yard_s = Unit.get_unit_division(IMPERIAL.YARD, SI.SECOND)
         yard_s2 = Unit.get_unit_division(yard_s, SI.SECOND)
         self.assertEqual('yd/s2', str(yard_s2.symbol()))
         kgyard_s2 = Unit.get_unit_multiplication(SI.KILOGRAM, yard_s2)
-        self.assertEqual('(kg.yd)/s2', str(kgyard_s2.symbol()))
+        self.assertEqual('(kg·yd)/s2', str(kgyard_s2.symbol()))
         m2 = Unit.get_unit_exponentiation(SI.METRE, 2)
         kgyard_m2s2 = Unit.get_unit_division(kgyard_s2, m2)
-        self.assertEqual('(kg.yd)/(s2.m2)', str(kgyard_m2s2.symbol()))
+        self.assertEqual('(kg·yd)/(s2·m2)', str(kgyard_m2s2.symbol()))

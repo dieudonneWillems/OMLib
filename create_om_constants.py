@@ -386,7 +386,9 @@ from omlib.dimension import Dimension
 from omlib.scale import Scale
 from omlib.unit import Prefix, Unit
 
+
 class OM:
+
     NAMESPACE = OM_IDS.NAMESPACE
     
 """
@@ -394,7 +396,7 @@ class OM:
     file_contents = create_all_units_in_file(all_units_dict, file_contents)
     print(file_contents)
     app_path = os.path.dirname(os.path.abspath(__file__))
-    om_path = os.path.join(app_path, "omlib/om-constants.py")
+    om_path = os.path.join(app_path, "omlib/omconstants.py")
     file = open(om_path, 'w')
     file.write(file_contents)
     file.close()

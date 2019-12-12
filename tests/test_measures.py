@@ -1,8 +1,9 @@
 import unittest
 
-from omlib.constants import OM, SI, IMPERIAL
+from omlib.constants import SI, IMPERIAL
 from omlib.dimension import Dimension
 from omlib.measure import Measure, Point, om
+from omlib.omconstants import OM
 from omlib.scale import Scale
 from omlib.unit import Unit, UnitMultiplication, UnitDivision
 
@@ -484,8 +485,8 @@ class TestUnits(unittest.TestCase):
 
     def test_multiplication_with_one(self):
         portion = Unit.get_unit_multiple(SI.GRAM, 32.0, label="portion", symbol="portion")
-        p32g = Unit.get_unit_division(OM.ONE, portion)
-        kcal_p32g = Unit.get_unit_multiplication(OM.KILOCALORIE, p32g)
+        p32g = Unit.get_unit_division(OM.one, portion)
+        kcal_p32g = Unit.get_unit_multiplication(OM.kilocalorieMean, p32g)
         m1 = om(2, portion)
         m2 = om(34, kcal_p32g)
         m3 = m1 * m2
@@ -493,8 +494,8 @@ class TestUnits(unittest.TestCase):
 
     def test_multiplication_with_one_1(self):
         portion = Unit.get_unit_multiple(SI.GRAM, 32.0, label="portion", symbol="portion")
-        p32g = Unit.get_unit_division(OM.ONE, portion)
-        p32g_kcal = Unit.get_unit_division(p32g, OM.KILOCALORIE)
+        p32g = Unit.get_unit_division(OM.one, portion)
+        p32g_kcal = Unit.get_unit_division(p32g, OM.kilocalorieMean)
         m1 = om(2, portion)
         m2 = om(34, p32g_kcal)
         m3 = m1 * m2

@@ -600,7 +600,7 @@ class Prefix(object):
     def with_identifier(identifier):
         identifier_string = str(identifier)
         if identifier_string in Prefix._prefixes:
-            return Prefix._prefixes(identifier_string)
+            return Prefix._prefixes[identifier_string]
         return None
 
     def __init__(self, name, symbol, factor, identifier):

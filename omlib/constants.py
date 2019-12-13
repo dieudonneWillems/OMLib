@@ -11,7 +11,7 @@ class OM_IDS:
 
 
 class SI:
-    SYSTEM_OF_UNITS = "SI"  # WARNING If you change "SI" also change in constants.py
+    SYSTEM_OF_UNITS = str(OM_IDS.NAMESPACE + 'InternationalSystemOfUnits')  # WARNING If you change "SI" also change in constants.py
 
     # SI Prefixes
     YOTTA = Prefix('yotta', 'Y', 1e24, OM_IDS.NAMESPACE + 'yotta')
@@ -76,17 +76,5 @@ class JEDEC:
     GIGA = Prefix('giga', 'G', pow(2, 30), OM_IDS.NAMESPACE + 'jedec-giga')
 
 
-class IMPERIAL:
-    SYSTEM_OF_UNITS = "IMPERIAL"
-
-    # Imperial Base uits
-    YARD = Unit.get_singular_unit('yard', 'yd', base_unit=SI.METRE, factor=0.9144, identifier=OM_IDS.NAMESPACE + 'yard',
-                                  system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
-    FOOT = Unit.get_singular_unit('foot', 'ft', base_unit=YARD, factor=1 / 3, identifier=OM_IDS.NAMESPACE + 'foot')
-    INCH = Unit.get_singular_unit('inch', 'in', base_unit=YARD, factor=1 / 36, identifier=OM_IDS.NAMESPACE + 'inch')
-
-    POUND = Unit.get_singular_unit('pound', 'lb', base_unit=SI.KILOGRAM, factor=0.45359237,
-                                   identifier=OM_IDS.NAMESPACE + 'pound', system_of_units=SYSTEM_OF_UNITS,
-                                   is_base_unit=True)
 
 

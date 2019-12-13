@@ -3,8 +3,6 @@ from datetime import datetime
 
 from rdflib import Graph, URIRef, Literal
 
-from omlib.constants import OM_IDS
-
 
 def load_OM():
     app_path = os.path.dirname(os.path.abspath(__file__))
@@ -44,6 +42,14 @@ def define_units(om_graph):
             ?instance a ?class.
             ?class rdfs:subClassOf* om:Unit.
             ?class rdfs:subClassOf* ?superClass.
+            OPTIONAL {
+                ?system om:hasBaseUnit ?instance.
+                BIND (true AS ?isBaseUnit)
+            }
+            OPTIONAL {
+                ?system om:hasDerivedUnit ?instance.
+                BIND (false AS ?isBaseUnit)
+            }
             OPTIONAL { ?instance rdfs:label ?label. }
             OPTIONAL { ?instance om:alternativeLabel ?altLabel. }
             OPTIONAL { ?instance om:symbol ?symbol. }
@@ -78,6 +84,8 @@ def define_units(om_graph):
             unit_dict = dict()
         unit_dict = __add_property_to_dict(unit_dict, "class", row['class'])
         unit_dict = __add_property_to_dict(unit_dict, "class", row['superClass'])
+        unit_dict = __add_property_to_dict(unit_dict, "system", row.system)
+        unit_dict = __add_property_to_dict(unit_dict, "isBaseUnit", row.isBaseUnit)
         unit_dict = __add_property_to_dict(unit_dict, "label", row.label)
         unit_dict = __add_property_to_dict(unit_dict, "altLabel", row.altLabel)
         unit_dict = __add_property_to_dict(unit_dict, "symbol", row.symbol)
@@ -109,7 +117,7 @@ def __determine_order(all_units_dict):
     order = []
     todo = []
     keys = all_units_dict.keys()
-    gram = str(OM_IDS.NAMESPACE + 'gram')
+    gram = str('http://www.ontology-of-units-of-measure.org/resource/om-2/gram')
     for ident in keys:
         todo.append(ident)
     while len(todo) > 0:
@@ -225,7 +233,17 @@ def create_singular_unit_in_file(identifier, unit_dict, file_contents):
     py_name = __get_python_name(identifier)
     label = __remove_quotes(label)
     symbol = __remove_quotes(symbol)
-    if 'baseUnit' in unit_dict and not str(identifier) == str(OM_IDS.NAMESPACE + 'gram'):
+    system = None
+    is_base_unit = False
+    if 'system' in unit_dict:
+        system = unit_dict['system']
+        if not isinstance(system, list):
+            system = "'"+str(system)+"'"
+        else:
+            system = str(system)
+    if 'isBaseUnit' in unit_dict:
+        is_base_unit = unit_dict['isBaseUnit'].value
+    if 'baseUnit' in unit_dict and not str(identifier) == str('http://www.ontology-of-units-of-measure.org/resource/om-2/gram'):
         base_unit = unit_dict['baseUnit']
         base_py_name = __get_python_name(base_unit)
         factor = 1.0
@@ -233,12 +251,7 @@ def create_singular_unit_in_file(identifier, unit_dict, file_contents):
             factor = unit_dict['factor'].value
         else:
             pass
-        line = "    {} = Unit.get_singular_unit({}, {}, base_unit={}, factor={}, identifier='{}')\n".format(py_name,
-                                                                                                              label,
-                                                                                                              symbol,
-                                                                                                              base_py_name,
-                                                                                                              factor,
-                                                                                                              identifier)
+        line = "    {} = Unit.get_singular_unit({}, {}, base_unit={}, factor={}, identifier='{}', system_of_units={}, is_base_unit={})\n".format(py_name, label, symbol, base_py_name, factor, identifier, system, is_base_unit)
         file_contents = file_contents + line
     else:
         dimension = "Dimension("
@@ -271,7 +284,7 @@ def create_singular_unit_in_file(identifier, unit_dict, file_contents):
         else:
             dimension += "0"
         dimension += ")"
-        line = "    {} = Unit.get_singular_unit({}, {}, {}, identifier='{}')\n".format(py_name, label, symbol, dimension,  identifier)
+        line = "    {} = Unit.get_singular_unit({}, {}, {}, identifier='{}', system_of_units={}, is_base_unit={})\n".format(py_name, label, symbol, dimension,  identifier, system, is_base_unit)
         file_contents = file_contents + line
     return file_contents
 
@@ -279,12 +292,22 @@ def create_singular_unit_in_file(identifier, unit_dict, file_contents):
 def create_prefixed_unit_in_file(identifier, unit_dict, file_contents):
     if 'prefix' in unit_dict:
         prefix = unit_dict['prefix']
+        system = None
+        is_base_unit = False
         if isinstance(prefix, URIRef):
             prefix = str(prefix)
+        if 'system' in unit_dict:
+            system = unit_dict['system']
+            if not isinstance(system, list):
+                system = "'"+str(system)+"'"
+            else:
+                system = str(system)
+        if 'isBaseUnit' in unit_dict:
+            is_base_unit = unit_dict['isBaseUnit'].value
         py_name = __get_python_name(identifier)
         base_unit = unit_dict['baseUnit']
         base_py_name = __get_python_name(base_unit)
-        line = "    {} = Unit.get_prefixed_unit('{}', base_unit={}, identifier='{}')\n".format(py_name, prefix, base_py_name, identifier)
+        line = "    {} = Unit.get_prefixed_unit('{}', base_unit={}, identifier='{}', system_of_units={}, is_base_unit={})\n".format(py_name, prefix, base_py_name, identifier, system, is_base_unit)
         file_contents = file_contents + line
     return file_contents
 
@@ -306,7 +329,14 @@ def create_unit_multiple_in_file(identifier, unit_dict, file_contents):
         factor = unit_dict['factor'].value
     else:
         pass
-    line = "    {} = Unit.get_unit_multiple({}, factor={}, identifier='{}', label={}, symbol={})\n".format(py_name, base_py_name, factor, identifier, label, symbol)
+    system = None
+    if 'system' in unit_dict:
+        system = unit_dict['system']
+        if not isinstance(system, list):
+            system = "'"+str(system)+"'"
+        else:
+            system = str(system)
+    line = "    {} = Unit.get_unit_multiple({}, factor={}, identifier='{}', label={}, symbol={}, system_of_units={})\n".format(py_name, base_py_name, factor, identifier, label, symbol, system)
     file_contents = file_contents + line
     return file_contents
 
@@ -317,7 +347,14 @@ def create_unit_multiplication_in_file(identifier, unit_dict, file_contents):
     multiplier_py_name = __get_python_name(multiplier)
     multiplicand = unit_dict['multiplicand']
     multiplicand_py_name = __get_python_name(multiplicand)
-    line = "    {} = Unit.get_unit_multiplication({}, {}, identifier='{}')\n".format(py_name, multiplier_py_name, multiplicand_py_name, identifier)
+    system = None
+    if 'system' in unit_dict:
+        system = unit_dict['system']
+        if not isinstance(system, list):
+            system = "'"+str(system)+"'"
+        else:
+            system = str(system)
+    line = "    {} = Unit.get_unit_multiplication({}, {}, identifier='{}', system_of_units={})\n".format(py_name, multiplier_py_name, multiplicand_py_name, identifier, system)
     file_contents = file_contents + line
     return file_contents
 
@@ -328,7 +365,14 @@ def create_unit_division_in_file(identifier, unit_dict, file_contents):
     numerator_py_name = __get_python_name(numerator)
     denominator = unit_dict['denominator']
     denominator_py_name = __get_python_name(denominator)
-    line = "    {} = Unit.get_unit_division({}, {}, identifier='{}')\n".format(py_name, numerator_py_name, denominator_py_name, identifier)
+    system = None
+    if 'system' in unit_dict:
+        system = unit_dict['system']
+        if not isinstance(system, list):
+            system = "'"+str(system)+"'"
+        else:
+            system = str(system)
+    line = "    {} = Unit.get_unit_division({}, {}, identifier='{}', system_of_units={})\n".format(py_name, numerator_py_name, denominator_py_name, identifier, system)
     file_contents = file_contents + line
     return file_contents
 
@@ -338,7 +382,14 @@ def create_unit_exponentiation_in_file(identifier, unit_dict, file_contents):
     base_unit = unit_dict['exponentBase']
     base_unit_py_name = __get_python_name(base_unit)
     exponent = unit_dict['exponent'].value
-    line = "    {} = Unit.get_unit_exponentiation({}, {}, identifier='{}')\n".format(py_name, base_unit_py_name, exponent, identifier)
+    system = None
+    if 'system' in unit_dict:
+        system = unit_dict['system']
+        if not isinstance(system, list):
+            system = "'"+str(system)+"'"
+        else:
+            system = str(system)
+    line = "    {} = Unit.get_unit_exponentiation({}, {}, identifier='{}', system_of_units={})\n".format(py_name, base_unit_py_name, exponent, identifier, system)
     file_contents = file_contents + line
     return file_contents
 
@@ -348,12 +399,12 @@ def create_all_units_in_file(all_units_dict, file_contents):
     for ident in ids:
         unit_dict = all_units_dict[ident]
         unit_classes = unit_dict['class']
-        singular_unit = URIRef(OM_IDS.NAMESPACE + 'SingularUnit')
-        prefixed_unit = URIRef(OM_IDS.NAMESPACE + 'PrefixedUnit')
-        unit_multiple = URIRef(OM_IDS.NAMESPACE + 'UnitMultiple')
-        unit_multiplication = URIRef(OM_IDS.NAMESPACE + 'UnitMultiplication')
-        unit_division = URIRef(OM_IDS.NAMESPACE + 'UnitDivision')
-        unit_exponentiation = URIRef(OM_IDS.NAMESPACE + 'UnitExponentiation')
+        singular_unit = URIRef('http://www.ontology-of-units-of-measure.org/resource/om-2/SingularUnit')
+        prefixed_unit = URIRef('http://www.ontology-of-units-of-measure.org/resource/om-2/PrefixedUnit')
+        unit_multiple = URIRef('http://www.ontology-of-units-of-measure.org/resource/om-2/UnitMultiple')
+        unit_multiplication = URIRef('http://www.ontology-of-units-of-measure.org/resource/om-2/UnitMultiplication')
+        unit_division = URIRef('http://www.ontology-of-units-of-measure.org/resource/om-2/UnitDivision')
+        unit_exponentiation = URIRef('http://www.ontology-of-units-of-measure.org/resource/om-2/UnitExponentiation')
         if prefixed_unit in unit_classes:
             file_contents = create_prefixed_unit_in_file(ident, unit_dict, file_contents)
         else:
@@ -380,7 +431,6 @@ if __name__ == '__main__':
     all_units_dict = define_units(graph)
     file_contents = """
 import rdflib
-from omlib.constants import OM_IDS
 from rdflib import URIRef, Literal
 from omlib.dimension import Dimension
 from omlib.scale import Scale
@@ -389,7 +439,7 @@ from omlib.unit import Prefix, Unit
 
 class OM:
 
-    NAMESPACE = OM_IDS.NAMESPACE
+    NAMESPACE = 'http://www.ontology-of-units-of-measure.org/resource/om-2/'
     
 """
     file_contents = "# This file was automatically generated on " + date_time + ".\n" + file_contents

@@ -203,6 +203,13 @@ class Measure(Thing):
                 if log_value < log_selected_value:
                     log_selected_value = log_value
                     selected_unit = test_unit
+                if abs(log_value - log_selected_value) < 0.1 and isinstance(test_unit, SingularUnit):
+                    log_selected_value = log_value
+                    selected_unit = test_unit
+                if abs(log_value - log_selected_value) < 0.1 and isinstance(test_unit, PrefixedUnit)\
+                        and not isinstance(selected_unit, SingularUnit):
+                    log_selected_value = log_value
+                    selected_unit = test_unit
         self.convert(selected_unit)
 
     @staticmethod

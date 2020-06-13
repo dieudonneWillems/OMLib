@@ -9,6 +9,11 @@ Welcome to OMLib's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   
+   create-measures-and-points
+   unit-and-scale-conversion
+   exceptions
+   example_code
 
 
 

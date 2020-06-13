@@ -1,4 +1,4 @@
-from omlib.thing import Thing
+from .thing import Thing
 
 
 class Measure(Thing):

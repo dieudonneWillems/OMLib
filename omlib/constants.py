@@ -1,6 +1,6 @@
 from rdflib import URIRef
 
-from omlib.unit import Prefix
+from .unit import Prefix
 
 
 class OM:

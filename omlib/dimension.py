@@ -1,4 +1,4 @@
-from exceptions.dimensionexception import DimensionalException
+from .exceptions.dimensionexception import DimensionalException
 
 
 class Dimension:

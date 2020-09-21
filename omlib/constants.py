@@ -1,3 +1,4 @@
+import rdflib
 from rdflib import URIRef
 
 from omlib.dimension import Dimension
@@ -7,11 +8,10 @@ from omlib.unit import Prefix, Unit
 
 class OM_IDS:
     NAMESPACE = 'http://www.ontology-of-units-of-measure.org/resource/om-2/'
-    LENGTH_DIMENSION = URIRef(NAMESPACE + 'length-Dimension')
 
 
 class SI:
-    SYSTEM_OF_UNITS = "SI"  # WARNING If you change "SI" also change in constants.py
+    SYSTEM_OF_UNITS = str(OM_IDS.NAMESPACE + 'InternationalSystemOfUnits')  # WARNING If you change "SI" also change in constants.py
 
     # SI Prefixes
     YOTTA = Prefix('yotta', 'Y', 1e24, OM_IDS.NAMESPACE + 'yotta')
@@ -37,7 +37,7 @@ class SI:
 
     # SI Base Units
     SECOND = Unit.get_singular_unit('second', 's', Dimension(1, 0, 0, 0, 0, 0, 0),
-                                    identifier=OM_IDS.NAMESPACE + 'second',
+                                    identifier=OM_IDS.NAMESPACE + 'second-Time',
                                     system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
     METRE = Unit.get_singular_unit('metre', 'm', Dimension(0, 1, 0, 0, 0, 0, 0), identifier=OM_IDS.NAMESPACE + 'metre',
                                    system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
@@ -76,56 +76,5 @@ class JEDEC:
     GIGA = Prefix('giga', 'G', pow(2, 30), OM_IDS.NAMESPACE + 'jedec-giga')
 
 
-class IMPERIAL:
-    SYSTEM_OF_UNITS = "IMPERIAL"
-
-    # Imperial Base uits
-    YARD = Unit.get_singular_unit('yard', 'yd', base_unit=SI.METRE, factor=0.9144, identifier=OM_IDS.NAMESPACE + 'yard',
-                                  system_of_units=SYSTEM_OF_UNITS, is_base_unit=True)
-    FOOT = Unit.get_singular_unit('foot', 'ft', base_unit=YARD, factor=1 / 3, identifier=OM_IDS.NAMESPACE + 'foot')
-    INCH = Unit.get_singular_unit('inch', 'in', base_unit=YARD, factor=1 / 36, identifier=OM_IDS.NAMESPACE + 'inch')
-
-    POUND = Unit.get_singular_unit('pound', 'lb', base_unit=SI.KILOGRAM, factor=0.45359237,
-                                   identifier=OM_IDS.NAMESPACE + 'pound', system_of_units=SYSTEM_OF_UNITS,
-                                   is_base_unit=True)
 
 
-class OM:
-    NAMESPACE = OM_IDS.NAMESPACE
-    LENGTH_DIMENSION = OM_IDS.LENGTH_DIMENSION
-
-    ONE = Unit.get_singular_unit("one", "", dimensions=Dimension(), identifier=OM_IDS.NAMESPACE + 'one',
-                                 is_base_unit=True)
-
-    CENTIMETRE = Unit.get_prefixed_unit(SI.CENTI, base_unit=SI.METRE, identifier=OM_IDS.NAMESPACE + 'centimetre')
-    KILOMETRE = Unit.get_prefixed_unit(SI.KILO, base_unit=SI.METRE, identifier=OM_IDS.NAMESPACE + 'kilometre')
-
-    MINUTE_TIME = Unit.get_singular_unit("minute", "m", base_unit=SI.SECOND, factor=60,
-                                         identifier=OM_IDS.NAMESPACE + 'minute')
-    HOUR_TIME = Unit.get_singular_unit("hour", "h", base_unit=MINUTE_TIME, factor=60,
-                                       identifier=OM_IDS.NAMESPACE + 'hour')
-    KILOSECOND = Unit.get_prefixed_unit(SI.KILO, base_unit=SI.SECOND, identifier=OM_IDS.NAMESPACE + 'kilosecond')
-
-    DEGREE_CELSIUS = Unit.get_singular_unit("degree Celsius", "°C", base_unit=SI.KELVIN, factor=1.0)
-    DEGREE_FAHRENHEIT = Unit.get_singular_unit("degree Fahrenheit", "°F", base_unit=SI.KELVIN, factor=1.0 / 1.8)
-
-    KELVIN_SCALE = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", identifier=OM_IDS.NAMESPACE + 'KelvinScale')
-    CELSIUS_SCALE = Scale.get_interval_scale(KELVIN_SCALE, DEGREE_CELSIUS, -273.15, "Celsius scale",
-                                             identifier=OM_IDS.NAMESPACE + 'CelsiusScale')
-    FAHRENHEIT_SCALE = Scale.get_interval_scale(KELVIN_SCALE, DEGREE_FAHRENHEIT, -459.67, "Fahrenheit scale",
-                                                identifier=OM_IDS.NAMESPACE + 'FahrenheitScale')
-
-    METRE_PER_SECOND = Unit.get_unit_division(SI.METRE, SI.SECOND, identifier=OM_IDS.NAMESPACE + 'metrePerSecond')
-    KILOMETRE_PER_HOUR = Unit.get_unit_division(KILOMETRE, HOUR_TIME, identifier=OM_IDS.NAMESPACE + 'kilometrePerHour')
-    METRE_PER_SECOND_SQUARED = Unit.get_unit_division(SI.METRE, Unit.get_unit_exponentiation(SI.SECOND, 2),
-                                                      identifier=OM_IDS.NAMESPACE + 'metrePerSecondSquared')
-
-    KILOGRAM_METRE_PER_SECOND_SQUARED = Unit.get_unit_multiplication(SI.KILOGRAM, METRE_PER_SECOND_SQUARED,
-                                                                     identifier=OM_IDS.NAMESPACE + 'kilogramMetrePerSecond')
-    NEWTON = Unit.get_singular_unit('newton', 'N', base_unit=KILOGRAM_METRE_PER_SECOND_SQUARED,
-                                    identifier=OM_IDS.NAMESPACE + 'newton')
-    JOULE = Unit.get_singular_unit('joule', 'J', base_unit=Unit.get_unit_multiplication(NEWTON, SI.METRE),
-                                   identifier=OM_IDS.NAMESPACE + 'joule')
-    CALORIE = Unit.get_singular_unit('calorie', 'cal', base_unit=JOULE, factor=4.184,
-                                     identifier=OM_IDS.NAMESPACE + 'calorie')
-    KILOCALORIE = Unit.get_prefixed_unit(SI.KILO, CALORIE, identifier=OM_IDS.NAMESPACE + 'kilocalorie')

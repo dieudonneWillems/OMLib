@@ -11,27 +11,30 @@ class Thing:
         if label is None:
             self.prefLabels = []
         else:
-            if isinstance(label, Literal):
-                self.prefLabels = [label]
-            else:
-                label_lit = Literal(label, datatype=XSD.string)
-                self.prefLabels = [label_lit]
+            self.prefLabels = []
+            self.__add_label_to_array(self.prefLabels, label, None)
         self.altLabels = []
 
     def __add_label_to_array(self, array, label, language=None):
-        if language is None:
-            if isinstance(label, Literal):
-                array.append(label)
-            else:
-                label_lit = Literal(label, datatype=XSD.string)
-                array.append(label_lit)
+        if isinstance(label, list):
+            for item in label:
+                self.__add_label_to_array(array, item, language)
         else:
-            if isinstance(label, Literal):
-                label_lit = Literal(label.normalize, language)
-                array.append(label_lit)
+            if language is None:
+                if isinstance(label, Literal) and not label in array:
+                    array.append(label)
+                else:
+                    label_lit = Literal(label, datatype=XSD.string)
+                    if not label_lit in array:
+                        array.append(label_lit)
             else:
-                label_lit = Literal(label, language)
-                array.append(label_lit)
+                if isinstance(label, Literal) and not label in array:
+                    label_lit = Literal(label.normalize, language)
+                    array.append(label_lit)
+                else:
+                    label_lit = Literal(label, language)
+                    if not label_lit in array:
+                        array.append(label_lit)
 
     def add_preferred_label(self, label, language=None):
         # TODO Check if a preferred label in the specified language already exists, if so move the old one to alt labels
@@ -72,26 +75,29 @@ class SymbolThing(Thing):
     def __init__(self, name=None, symbol=None, identifier=None):
         super().__init__(name, identifier)
         self.dimensions = []
-        if isinstance(symbol, Literal):
-            self.symbols = [symbol]
-        else:
-            symbol_lit = Literal(symbol, datatype=XSD.string)
-            self.symbols = [symbol_lit]
+        self.symbols = []
+        self.add_symbol(symbol)
 
     def add_symbol(self, symbol, language=None):
-        if language is None:
-            if isinstance(symbol, Literal):
-                self.symbols.append(symbol)
-            else:
-                label_lit = Literal(symbol, datatype=XSD.string)
-                self.symbols.append(label_lit)
+        if isinstance(symbol, list):
+            for item in symbol:
+                self.__add_label_to_array(self.symbols, item, language)
         else:
-            if isinstance(symbol, Literal):
-                label_lit = Literal(symbol.normalize, language)
-                self.symbols.append(label_lit)
+            if language is None:
+                if isinstance(symbol, Literal) and not symbol in self.symbols:
+                    self.symbols.append(symbol)
+                else:
+                    label_lit = Literal(symbol, datatype=XSD.string)
+                    if not label_lit in self.symbols:
+                        self.symbols.append(label_lit)
             else:
-                label_lit = Literal(symbol, language)
-                self.symbols.append(label_lit)
+                if isinstance(symbol, Literal) and not symbol in self.symbols:
+                    label_lit = Literal(symbol.normalize, language)
+                    self.symbols.append(label_lit)
+                else:
+                    label_lit = Literal(symbol, language)
+                    if not label_lit in self.symbols:
+                        self.symbols.append(label_lit)
 
     def symbol(self):
         symbol = self.preferred_symbol()

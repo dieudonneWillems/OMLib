@@ -1,8 +1,9 @@
 import unittest
 
-from omlib.constants import OM, SI, IMPERIAL
+from omlib.constants import SI
 from omlib.dimension import Dimension
 from omlib.measure import Measure, Point, om
+from omlib.omconstants import OM
 from omlib.scale import Scale
 from omlib.unit import Unit, UnitMultiplication, UnitDivision
 
@@ -12,27 +13,27 @@ class TestUnits(unittest.TestCase):
     def test_singular_unit_measure_conversion(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
-        feet = IMPERIAL.FOOT
+        feet = OM.footInternational
         measure = Measure(1.75, m)
         measure.convert(feet)
         self.assertAlmostEqual(float(5.74147), float(measure.numericalValue), delta=0.0001)
-        self.assertEqual(str(OM.NAMESPACE + 'foot'), str(measure.unit.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'foot-International'), str(measure.unit.identifier))
 
     def test_singular_unit_measure_conversion_by_creation(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
-        feet = IMPERIAL.FOOT
+        feet = OM.footInternational
         measure = Measure(1.75, m)
         new_measure = Measure.create_by_converting(measure, feet)
         self.assertAlmostEqual(float(5.74147), float(new_measure.numericalValue), delta=0.0001)
-        self.assertEqual(str(OM.NAMESPACE + 'foot'), str(new_measure.unit.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'foot-International'), str(new_measure.unit.identifier))
 
     def test_measure_conversion_1(self):
         l_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
         m_dim = Dimension(0, 0, 1, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', l_dim, identifier=OM.NAMESPACE + 'metre')
-        inch = IMPERIAL.INCH
+        inch = OM.inchInternational
         inch2 = Unit.get_unit_exponentiation(inch, 2)
         s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
         g = Unit.get_singular_unit('gram', 'g', m_dim, identifier=OM.NAMESPACE + 'gram')
@@ -106,21 +107,21 @@ class TestUnits(unittest.TestCase):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
-        s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
+        s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second-Time')
         value_1 = Measure(2, m)
         value_2 = Measure(50, s)
         result_value_1 = value_1 / value_2
         self.assertAlmostEqual(0.04, result_value_1.numericalValue, delta=0.01)
         self.assertTrue(isinstance(result_value_1.unit, UnitDivision))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_1.unit.numerator.identifier))
-        self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_1.unit.denominator.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'second-Time'), str(result_value_1.unit.denominator.identifier))
         result_value_2 = value_2 / value_1
         self.assertAlmostEqual(25, result_value_2.numericalValue, delta=0.01)
         self.assertTrue(isinstance(result_value_2.unit, UnitDivision))
-        self.assertEqual(str(OM.NAMESPACE + 'second'), str(result_value_2.unit.numerator.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'second-Time'), str(result_value_2.unit.numerator.identifier))
         self.assertEqual(str(OM.NAMESPACE + 'metre'), str(result_value_2.unit.denominator.identifier))
         Unit.get_unit_division(m, s, identifier=OM.NAMESPACE + 'metrePerSecond')
-        self.assertEqual(str(OM.NAMESPACE + 'metrePerSecond'), str(result_value_1.unit.identifier))
+        self.assertEqual(str(OM.NAMESPACE + 'metrePerSecond-Time'), str(result_value_1.unit.identifier))
 
     def test_equality_measures_equal(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
@@ -174,9 +175,9 @@ class TestUnits(unittest.TestCase):
         self.assertAlmostEqual(0.0667, measure.numericalValue, delta=0.0001)
 
     def test_conversion_to_base_units2(self):
-        m4 = om(4.34, IMPERIAL.FOOT)
+        m4 = om(4.34, OM.footInternational)
         m4.convert_to_base_units()
-        self.assertEqual(IMPERIAL.YARD, m4.unit)
+        self.assertEqual(OM.yardInternational, m4.unit)
         self.assertAlmostEqual(1.44666667, m4.numericalValue, delta=0.0001)
 
     def test_conversion_to_convenient_unit_1(self):
@@ -213,7 +214,7 @@ class TestUnits(unittest.TestCase):
         s2 = Unit.get_unit_exponentiation(SI.SECOND, 2)
         m1_s2 = Unit.get_unit_multiplication(SI.METRE, s2)
         kg_m1_s2 = Unit.get_unit_division(SI.KILOGRAM, m1_s2)
-        pa = Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2)
+        pa = OM.pascal
         m1 = Measure(12.343, kg_m1_s2)
         m1.convert_to_convenient_units()
         self.assertEqual(pa, m1.unit)
@@ -222,7 +223,7 @@ class TestUnits(unittest.TestCase):
         m2.convert_to_convenient_units(system_of_units=SI.SYSTEM_OF_UNITS)
         self.assertEqual(pa, m2.unit)
         self.assertAlmostEqual(12.343, m2.numericalValue, delta=0.00001)
-        pa2 = Unit.get_singular_unit("Pascal", "Pa", base_unit=kg_m1_s2, system_of_units=SI.SYSTEM_OF_UNITS)
+        pa2 = OM.pascal
         m3 = Measure(12.343, kg_m1_s2)
         m3.convert_to_convenient_units()
         self.assertEqual(pa2, m3.unit)
@@ -238,7 +239,7 @@ class TestUnits(unittest.TestCase):
         Unit.get_prefixed_unit(SI.DECA, m)
         Unit.get_prefixed_unit(SI.HECTO, m)
         Unit.get_prefixed_unit(SI.KILO, m)
-        yd = IMPERIAL.YARD
+        yd = OM.yardInternational
         m2 = Measure(1, yd)
         m2.convert_to_convenient_units()
         self.assertEqual(yd, m2.unit)
@@ -453,7 +454,7 @@ class TestUnits(unittest.TestCase):
         m3 = m1 * m2
         self.assertTrue(isinstance(m3, Measure))
         self.assertAlmostEqual(139.2, m3.numericalValue, delta=0.000001)
-        self.assertEqual("K.m", str(m3.unit.symbol()))
+        self.assertEqual("K·m", str(m3.unit.symbol()))
 
     def test_multiplication_2(self):
         k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
@@ -462,7 +463,7 @@ class TestUnits(unittest.TestCase):
         m3 = m1 * m2
         self.assertTrue(isinstance(m3, Measure))
         self.assertAlmostEqual(139.2, m3.numericalValue, delta=0.000001)
-        self.assertEqual("m.K", str(m3.unit.symbol()))
+        self.assertEqual("m·K", str(m3.unit.symbol()))
 
     def test_division_1(self):
         k = Scale.get_ratio_scale(SI.KELVIN, "Kelvin scale", "http://example.org/KelvinScale")
@@ -484,8 +485,8 @@ class TestUnits(unittest.TestCase):
 
     def test_multiplication_with_one(self):
         portion = Unit.get_unit_multiple(SI.GRAM, 32.0, label="portion", symbol="portion")
-        p32g = Unit.get_unit_division(OM.ONE, portion)
-        kcal_p32g = Unit.get_unit_multiplication(OM.KILOCALORIE, p32g)
+        p32g = Unit.get_unit_division(OM.one, portion)
+        kcal_p32g = Unit.get_unit_multiplication(OM.kilocalorieMean, p32g)
         m1 = om(2, portion)
         m2 = om(34, kcal_p32g)
         m3 = m1 * m2
@@ -493,12 +494,12 @@ class TestUnits(unittest.TestCase):
 
     def test_multiplication_with_one_1(self):
         portion = Unit.get_unit_multiple(SI.GRAM, 32.0, label="portion", symbol="portion")
-        p32g = Unit.get_unit_division(OM.ONE, portion)
-        p32g_kcal = Unit.get_unit_division(p32g, OM.KILOCALORIE)
+        p32g = Unit.get_unit_division(OM.one, portion)
+        p32g_kcal = Unit.get_unit_division(p32g, OM.kilocalorieMean)
         m1 = om(2, portion)
         m2 = om(34, p32g_kcal)
         m3 = m1 * m2
-        self.assertEqual("/kcal", str(m3.unit.symbol()))
+        self.assertEqual("1/kcal", str(m3.unit.symbol()))
 
     def test_multiplication_with_one_2(self):
         g_g = Unit.get_unit_division(SI.GRAM, SI.GRAM)

@@ -2,8 +2,9 @@ import unittest
 
 from omlib.exceptions.dimensionexception import DimensionalException
 from omlib.exceptions.unitconversionexception import UnitConversionException
-from omlib.constants import OM, SI, IMPERIAL
+from omlib.constants import SI
 from omlib.dimension import Dimension
+from omlib.omconstants import OM
 from omlib.unit import UnitDivision, UnitExponentiation, \
     Unit
 
@@ -54,7 +55,7 @@ class TestUnits(unittest.TestCase):
         ms = Unit.get_unit_multiplication(m, s)
         ms_dim = Dimension(1, 1, 0, 0, 0, 0, 0)
         self.assertTrue(ms.label() is None)
-        self.assertEqual('m.s', ms.symbol().value)
+        self.assertEqual('m·s', ms.symbol().value)
         self.assertEqual(ms_dim, ms.dimensions)
 
     def test__unit_exponentiation(self):
@@ -117,7 +118,7 @@ class TestUnits(unittest.TestCase):
     def test_singular_unit_conversion_1(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
-        inch = IMPERIAL.INCH
+        inch = OM.inchInternational
         m_to_inch_factor = Unit.conversion_factor(m, inch)
         self.assertAlmostEqual(39.3700787, m_to_inch_factor, delta=0.00001)
         inch_to_m_factor = Unit.conversion_factor(inch, m)
@@ -126,7 +127,7 @@ class TestUnits(unittest.TestCase):
     def test_singular_unit_conversion_2(self):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
-        feet = IMPERIAL.FOOT
+        feet = OM.footInternational
         m_to_feet_factor = Unit.conversion_factor(m, feet)
         self.assertAlmostEqual(3.280839895, m_to_feet_factor, delta=0.0001)
         feet_to_m_factor = Unit.conversion_factor(feet, m)
@@ -180,7 +181,7 @@ class TestUnits(unittest.TestCase):
         m_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
         m = Unit.get_singular_unit('metre', 'm', m_dim, identifier=OM.NAMESPACE + 'metre')
         km = Unit.get_prefixed_unit(SI.KILO, m, OM.NAMESPACE + 'kilometre')
-        feet = IMPERIAL.FOOT
+        feet = OM.footInternational
         feet_to_km_factor = Unit.conversion_factor(feet, km)
         self.assertAlmostEqual(0.0003048, feet_to_km_factor, delta=0.0001)
         km_to_feet_factor = Unit.conversion_factor(km, feet)
@@ -246,37 +247,6 @@ class TestUnits(unittest.TestCase):
         self.assertAlmostEqual(1e3, m3_to_l, delta=0.0001)
         l_to_m3 = Unit.conversion_factor(litre, m3)
         self.assertAlmostEqual(1e-3, l_to_m3, delta=0.0001)
-
-    def test_unit_conversion_1(self):
-        l_dim = Dimension(0, 1, 0, 0, 0, 0, 0)
-        t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
-        m_dim = Dimension(0, 0, 1, 0, 0, 0, 0)
-        m = Unit.get_singular_unit('metre', 'm', l_dim, identifier=OM.NAMESPACE + 'metre')
-        inch = IMPERIAL.INCH
-        inch2 = Unit.get_unit_exponentiation(inch, 2)
-        s = Unit.get_singular_unit('second', 's', t_dim, identifier=OM.NAMESPACE + 'second')
-        g = Unit.get_singular_unit('gram', 'g', m_dim, identifier=OM.NAMESPACE + 'gram')
-        kg = Unit.get_prefixed_unit(SI.KILO, g, OM.NAMESPACE + 'kilogram')
-        lb = Unit.get_singular_unit("pound", "lb", base_unit=kg, factor=0.45359237)
-        s2 = Unit.get_unit_exponentiation(s, 2)
-        ms_2 = Unit.get_unit_division(m, s2)
-        gn = Unit.get_singular_unit("gravity", "g", base_unit=ms_2, factor=9.80665)
-        kg_ms_2 = Unit.get_unit_multiplication(kg, ms_2)
-        n = Unit.get_singular_unit("Newton", "N", base_unit=kg_ms_2, identifier=OM.NAMESPACE + 'Newton')
-        lbf = Unit.get_unit_multiplication(lb, gn, "lbf")
-        m2 = Unit.get_unit_exponentiation(m, 2)
-        n_m2 = Unit.get_unit_division(n, m2)
-        pa = Unit.get_singular_unit("Pascal", "Pa", base_unit=n_m2, identifier=OM.NAMESPACE + 'Pascal')
-        lbf_inch2 = Unit.get_unit_division(lbf, inch2)
-        psi = Unit.get_singular_unit("Psi", "psi", base_unit=lbf_inch2, identifier=OM.NAMESPACE + 'psi')
-        n_to_lbf = Unit.conversion_factor(n, lbf)
-        self.assertAlmostEqual(0.22481, n_to_lbf, delta=0.0001)
-        lbf_to_n = Unit.conversion_factor(lbf, n)
-        self.assertAlmostEqual(4.448222, lbf_to_n, delta=0.0001)
-        pa_to_psi = Unit.conversion_factor(pa, psi)
-        self.assertAlmostEqual(0.000145033, pa_to_psi, delta=0.0000001)
-        psi_to_pa = Unit.conversion_factor(psi, pa)
-        self.assertAlmostEqual(6895, psi_to_pa, delta=1)
 
     def test_exponentiation_multiplication_conversion(self):
         t_dim = Dimension(1, 0, 0, 0, 0, 0, 0)
@@ -344,7 +314,7 @@ class TestUnits(unittest.TestCase):
 
     def test_base_units_2(self):
         m = SI.METRE
-        inch = IMPERIAL.INCH
+        inch = OM.inchInternational
         base = Unit.get_base_units(inch, SI.SYSTEM_OF_UNITS)
         self.assertEqual(m.identifier, base.identifier)
         self.assertNotEqual(inch.identifier, base.identifier)
@@ -366,64 +336,22 @@ class TestUnits(unittest.TestCase):
         self.assertEqual(m_s.identifier, base.identifier)
         self.assertNotEqual(km_h.identifier, base.identifier)
 
-    def test_base_units_imperial_1(self):
-        m = SI.METRE
-        yd = IMPERIAL.YARD
-        base = Unit.get_base_units(m, IMPERIAL.SYSTEM_OF_UNITS)
-        self.assertEqual(yd.identifier, base.identifier)
-        self.assertNotEqual(m.identifier, base.identifier)
-
-    def test_base_units_imperial_2(self):
-        kg = SI.KILOGRAM
-        lb = IMPERIAL.POUND
-        base = Unit.get_base_units(kg, IMPERIAL.SYSTEM_OF_UNITS)
-        self.assertEqual(lb.identifier, base.identifier)
-        self.assertNotEqual(kg.identifier, base.identifier)
-
-    def test_base_units_imperial_3(self):
-        m = SI.METRE
-        yd = IMPERIAL.YARD
-        base = Unit.get_base_units(yd, SI.SYSTEM_OF_UNITS)
-        self.assertEqual(m.identifier, base.identifier)
-        self.assertNotEqual(yd.identifier, base.identifier)
-
-    def test_base_units_imperial_4(self):
-        kg = SI.KILOGRAM
-        lb = IMPERIAL.POUND
-        base = Unit.get_base_units(lb, SI.SYSTEM_OF_UNITS)
-        self.assertEqual(kg.identifier, base.identifier)
-        self.assertNotEqual(lb.identifier, base.identifier)
-
-    def test_base_units_imperial_5(self):
-        kg = SI.KILOGRAM
-        lb = IMPERIAL.POUND
-        m = SI.METRE
-        yd = IMPERIAL.YARD
-        kg_m = Unit.get_unit_division(kg, m)
-        lb_yd = Unit.get_unit_division(lb, yd)
-        base = Unit.get_base_units(lb_yd, SI.SYSTEM_OF_UNITS)
-        self.assertEqual(kg_m, base)
-        self.assertNotEqual(lb_yd, base)
-        base2 = Unit.get_base_units(kg_m, IMPERIAL.SYSTEM_OF_UNITS)
-        self.assertEqual(lb_yd, base2)
-        self.assertNotEqual(kg_m, base2)
-
     def test_unit_simplification(self):
         m_s = Unit.get_unit_division(SI.METRE, SI.SECOND)
         m_s2 = Unit.get_unit_division(m_s, SI.SECOND)
         self.assertEqual('m/s2', str(m_s2.symbol()))
         kgm_s2 = Unit.get_unit_multiplication(SI.KILOGRAM, m_s2)
-        self.assertEqual('(kg.m)/s2', str(kgm_s2.symbol()))
+        self.assertEqual('(kg·m)/s2', str(kgm_s2.symbol()))
         m2 = Unit.get_unit_exponentiation(SI.METRE, 2)
         kg_ms2 = Unit.get_unit_division(kgm_s2, m2)
-        self.assertEqual('kg/(m.s2)', str(kg_ms2.symbol()))
+        self.assertEqual('kg/(m·s2)', str(kg_ms2.symbol()))
 
     def test_unit_simplification_2(self):
-        yard_s = Unit.get_unit_division(IMPERIAL.YARD, SI.SECOND)
+        yard_s = Unit.get_unit_division(OM.yardInternational, SI.SECOND)
         yard_s2 = Unit.get_unit_division(yard_s, SI.SECOND)
         self.assertEqual('yd/s2', str(yard_s2.symbol()))
         kgyard_s2 = Unit.get_unit_multiplication(SI.KILOGRAM, yard_s2)
-        self.assertEqual('(kg.yd)/s2', str(kgyard_s2.symbol()))
+        self.assertEqual('(kg·yd)/s2', str(kgyard_s2.symbol()))
         m2 = Unit.get_unit_exponentiation(SI.METRE, 2)
         kgyard_m2s2 = Unit.get_unit_division(kgyard_s2, m2)
-        self.assertEqual('(kg.yd)/(s2.m2)', str(kgyard_m2s2.symbol()))
+        self.assertEqual('(kg·yd)/(s2·m2)', str(kgyard_m2s2.symbol()))
